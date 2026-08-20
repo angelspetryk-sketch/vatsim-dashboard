@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VATSIM Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script>(function(){var s=localStorage.getItem("theme"),m;if(s==="light"||s==="dark")m=s;else m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?"light":"dark";if(m==="light")document.documentElement.classList.add("preload-light");})();</script>
+<style>
+html.preload-light body{background:#f5f5f5;color:#111}
+body{background:#0d1117;color:#fff;font-family:Arial;transition:.2s}
+.container{max-width:1100px}
+.header-box{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.card-dark{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:12px}
+.progress{height:14px;background:#21262d;overflow:hidden}
+.progress-bar{background:linear-gradient(90deg,#22c55e,#16a34a);font-size:12px;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1);white-space:nowrap;overflow:hidden;padding:0 4px}
+.flag{width:24px}
+.flag-group{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.flag-group .flag{width:22px}
+small{color:#9ca3af}
+.btn-outline-light,.btn-outline-info{color:#fff!important;border-color:#6c757d!important}
+.btn-outline-light:hover,.btn-outline-info:hover{background:#1f6feb!important;color:#fff!important}
+.btn-primary{background:#1f6feb!important;border-color:#1f6feb!important}
+body.light{background:#f5f5f5;color:#111}
+body.light .card-dark{background:#fff;border:1px solid #ddd}
+body.light .progress{background:#e5e5e5}
+body.light small{color:#555}
+body.light .btn-outline-light,body.light .btn-outline-info{color:#111!important;border-color:#999!important}
+body.light .btn-outline-light:hover,body.light .btn-outline-info:hover{background:#ddd!important;color:#000!important}
+.last-controlled{font-size:13px;margin-top:4px}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:1000;border-radius:50%;width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.export-btn{position:fixed;top:16px;right:70px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.disclaimer{font-size:12px;color:#9ca3af;font-style:italic;max-width:600px;line-height:1.4}
+body.light .disclaimer{color:#666}
+.stats-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;width:100%;max-width:900px}
+.stats-card{flex:1 1 380px;min-width:300px;margin-bottom:0;text-align:left}
+.stats-card .border-top{border-top:1px solid #30363d!important}
+body.light .stats-card .border-top{border-top:1px solid #ddd!important}
+#loading-overlay{position:fixed;inset:0;background:rgba(13,17,23,.75);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font-size:14px}
+#loading-overlay.show{display:flex}
+body.light #loading-overlay{background:rgba(245,245,245,.75);color:#111}
+.spinner-ring{width:54px;height:54px;border:5px solid rgba(255,255,255,.15);border-top-color:#1f6feb;border-radius:50%;animation:spin .9s linear infinite}
+body.light .spinner-ring{border-color:rgba(0,0,0,.1);border-top-color:#1f6feb}
+@keyframes spin{to{transform:rotate(360deg)}}
+.heatmap-wrap{width:100%;max-width:900px;margin-bottom:12px;overflow-x:auto;text-align:left}
+.heatmap-inner{display:inline-block}
+.heatmap-months{display:grid;grid-auto-flow:column;grid-auto-columns:15px;gap:3px;margin-left:24px;font-size:10px;color:#9ca3af;margin-bottom:4px;height:12px;position:relative}
+.heatmap-month-label{position:absolute;white-space:nowrap}
+body.light .heatmap-months{color:#666}
+.heatmap-body{display:flex;gap:8px}
+.heatmap-days-col{display:grid;grid-template-rows:repeat(7,12px);gap:3px;font-size:10px;color:#9ca3af;align-items:center}
+body.light .heatmap-days-col{color:#666}
+.heatmap{display:inline-grid;grid-auto-flow:column;grid-template-rows:repeat(7,12px);gap:3px}
+.heatmap-cell{width:12px;height:12px;border-radius:2px;background:#161b22;border:1px solid #21262d}
+.heatmap-cell.l1{background:#0e4429;border-color:#0e4429}
+.heatmap-cell.l2{background:#006d32;border-color:#006d32}
+.heatmap-cell.l3{background:#26a641;border-color:#26a641}
+.heatmap-cell.l4{background:#39d353;border-color:#39d353}
+.heatmap-cell.empty{background:transparent;border-color:transparent}
+body.light .heatmap-cell{background:#ebedf0;border-color:#ebedf0}
+body.light .heatmap-cell.l1{background:#9be9a8;border-color:#9be9a8}
+body.light .heatmap-cell.l2{background:#40c463;border-color:#40c463}
+body.light .heatmap-cell.l3{background:#30a14e;border-color:#30a14e}
+body.light .heatmap-cell.l4{background:#216e39;border-color:#216e39}
+body.light .heatmap-cell.empty{background:transparent;border-color:transparent}
+.heatmap-legend{display:flex;align-items:center;gap:4px;font-size:11px;color:#9ca3af;margin-top:6px;justify-content:flex-end}
+body.light .heatmap-legend{color:#666}
+.streaks-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13px}
+.streak-item{display:flex;align-items:center;gap:6px}
+.streak-item .icon{font-size:16px}
+.streak-item .val{font-weight:bold}
+.celebration-banner{display:none;background:linear-gradient(90deg,#22c55e,#16a34a);color:#fff;border-radius:12px;padding:12px 18px;font-weight:bold;box-shadow:0 4px 16px rgba(34,197,94,.4);animation:pg 2s ease-in-out infinite}
+.celebration-banner.show{display:block}
+@keyframes pg{0%,100%{box-shadow:0 4px 16px rgba(34,197,94,.4);transform:scale(1)}50%{box-shadow:0 6px 24px rgba(34,197,94,.7);transform:scale(1.02)}}
+.div-toggle{margin-right:8px;cursor:pointer;accent-color:#22c55e;transform:scale(1.15)}
+.div-card-header{display:flex;align-items:center;gap:6px}
+.pdf-export .theme-toggle,.pdf-export .export-btn,.pdf-export #loading-overlay,.pdf-export .div-toggle,.pdf-export .home-change-btn{display:none!important}
+.pdf-export .progress-bar{transition:none!important}
+.goal-note{margin-top:8px;padding:8px 10px;background:rgba(59,130,246,.12);border-left:3px solid #3b82f6;border-radius:4px;font-size:12px;color:#9ca3af;line-height:1.5}
+body.light .goal-note{color:#555;background:rgba(59,130,246,.08)}
+.cs-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:20px}
+.cs-modal.show{display:flex}
+.cs-modal-box{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;max-width:600px;width:100%;max-height:80vh;display:flex;flex-direction:column}
+.cs-modal-list{overflow-y:auto;flex:1}
+.cs-modal-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #30363d}
+body.light .cs-modal-box{background:#fff;border-color:#ddd;color:#111}
+body.light .cs-modal-row{border-bottom-color:#eee}
+.countdown-card{width:100%;max-width:900px;text-align:left}
+.countdown-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.countdown-days{font-size:22px;font-weight:bold;color:#3b82f6}
+.countdown-days.urgent{color:#ef4444}
+.countdown-days.warn{color:#f59e0b}
+.countdown-bar{height:10px;background:#21262d;border-radius:6px;overflow:hidden}
+body.light .countdown-bar{background:#e5e5e5}
+.countdown-bar-inner{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width 1s cubic-bezier(.16,1,.3,1)}
+.countdown-bar-inner.warn{background:linear-gradient(90deg,#f59e0b,#f97316)}
+.countdown-bar-inner.urgent{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.home-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.home-change-btn{background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-left:4px}
+body.light .home-change-btn{color:#1d4ed8}
+.home-manual-badge{background:#8b5cf6;color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;margin-left:4px}
+.home-modal-list{overflow-y:auto;flex:1}
+.home-option{display:flex;justify-content:space-between;align-items:center;padding:10px;border:1px solid #30363d;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:.15s}
+.home-option:hover{background:#1f6feb;border-color:#1f6feb}
+.home-option.active{background:#1f6feb;border-color:#1f6feb}
+body.light .home-option{border-color:#ddd}
+body.light .home-option:hover{background:#e0e7ff;border-color:#1f6feb;color:#111}
+body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#111}
+</style></head><body>
+    <div class="card-dark" style="text-align:center;font-size:13px;max-width:900px;margin:20px auto;">
+    💛 Support the development of this dashboard — donations welcome<br>
+    <b>IBAN:</b> <code>CZ69 0800 0000 0053 9882 2073</code>
+</div>
+
+<div id="loading-overlay"><div class="spinner-ring"></div><div>Loading VATSIM data…</div></div>
+<button class="btn btn-primary export-btn" onclick="exportPDF()">📄 PDF</button>
+<button class="btn btn-warning theme-toggle" onclick="toggleTheme()">🌙</button>
+
+<div class="container mt-4" id="dashboard-content">
+<div class="header-box">
+    <h1>VATSIM Dashboard</h1>
+    <div class="disclaimer">Limits shown for each division are not officially verified and should be taken as guidance only.</div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success">Fulfilled: {{ fulfilled_count }}</span>
+        <span class="badge bg-danger">Not fulfilled: {{ not_fulfilled_count }}</span>
+    </div>
+    {% if all_fulfilled %}<div class="celebration-banner show">🎉 All divisions fulfilled — great job! 🎉</div>{% endif %}
+    {% if pilot_name %}<div><span class="badge bg-secondary">{{ pilot_name }} ({{ request.args.get('cid') }})</span></div>{% endif %}
+
+    <form method="GET" class="my-2 d-flex justify-content-center gap-2 w-100" id="cid-form" style="max-width:600px;">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <input type="hidden" name="sort" value="{{ request.args.get('sort','hours') }}">
+        {% if excluded %}<input type="hidden" name="exclude" value="{{ excluded|join('|') }}">{% endif %}
+        {% if home_override %}<input type="hidden" name="home" value="{{ home_override }}">{% endif %}
+        <input class="form-control text-center" name="cid" placeholder="Enter CID" value="{{ request.args.get('cid','') }}">
+        <button class="btn btn-primary" type="submit">Load</button>
+    </form>
+
+    {% set exc = excluded|join('|') %}
+    {% set ho = home_override %}
+    <div class="controls">
+        <a class="btn btn-sm {% if request.args.get('sort','hours')=='hours' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=hours&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Hours</a>
+        <a class="btn btn-sm {% if request.args.get('sort')=='expiry' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=expiry&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Expiry</a>
+        <a class="btn btn-sm {% if request.args.get('sort')=='last' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=last&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Last Controlled</a>
+        <a class="btn btn-sm {% if mode=='rolling' %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode=rolling&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Rolling 3M</a>
+        {% for h in ['h1','h2'] %}{% if h in available_periods %}<a class="btn btn-sm {% if mode==h %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ h }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ h|upper }}</a>{% endif %}{% endfor %}
+        {% for q in ['q1','q2','q3','q4'] %}{% if q in available_quarters %}<a class="btn btn-sm {% if mode==q %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ q }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ q|upper }}</a>{% endif %}{% endfor %}
+    </div>
+
+    {% if period_countdown %}
+    <div class="card-dark countdown-card">
+        <div class="countdown-head">
+            <div>
+                <span style="font-size:15px;font-weight:bold;">⏳ {{ period_countdown.label }} ends {{ period_countdown.end_date }}</span>
+                <small style="display:block;margin-top:2px;">{{ period_countdown.days_elapsed }} / {{ period_countdown.total_days }} days elapsed ({{ period_countdown.pct_elapsed }}%)</small>
+            </div>
+            <div class="countdown-days {% if period_countdown.days_left <= 7 %}urgent{% elif period_countdown.days_left <= 21 %}warn{% endif %}">
+                {% if period_countdown.is_over %}Period ended{% else %}{{ period_countdown.days_left }} days left{% endif %}
+            </div>
+        </div>
+        <div class="countdown-bar">
+            <div class="countdown-bar-inner {% if period_countdown.days_left <= 7 %}urgent{% elif period_countdown.days_left <= 21 %}warn{% endif %}" style="width:{{ period_countdown.pct_elapsed }}%"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if heatmap.has_data %}
+    <div class="card-dark heatmap-wrap">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5 class="m-0">Activity (last 12 months)</h5>
+            <small>{{ heatmap.total_hhmm }} total • {{ heatmap.active_days }} active days</small>
+        </div>
+        <div class="heatmap-inner">
+            <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{{ ml.col * 15 }}px;">{{ ml.label }}</span>{% endfor %}</div>
+            <div class="heatmap-body">
+                <div class="heatmap-days-col"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
+                <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" title="{{ day.date }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
+            </div>
+            <div class="heatmap-legend"><span>Less</span><div class="heatmap-cell l0" style="display:inline-block;"></div><div class="heatmap-cell l1" style="display:inline-block;"></div><div class="heatmap-cell l2" style="display:inline-block;"></div><div class="heatmap-cell l3" style="display:inline-block;"></div><div class="heatmap-cell l4" style="display:inline-block;"></div><span>More</span></div>
+        </div>
+        <div class="streaks-row">
+            <div class="streak-item"><span class="icon">🔥</span><span>Current streak: <span class="val">{{ heatmap.current_streak }}d</span></span></div>
+            <div class="streak-item"><span class="icon">🏆</span><span>Best streak: <span class="val">{{ heatmap.best_streak }}d</span></span></div>
+            <div class="streak-item"><span class="icon">💤</span><span>Longest break: <span class="val">{{ heatmap.longest_break }}d</span></span></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="stats-row">
+        {% if top_callsigns %}<div class="card-dark stats-card"><h5 class="mb-3">Top Callsigns</h5>
+            {% for c in top_callsigns %}<div class="d-flex justify-content-between mb-2"><div><b>{{ c.callsign }}</b></div><div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div></div>{% endfor %}
+            {% if all_callsigns|length > 5 %}
+            <button class="btn btn-sm btn-outline-light mt-2 w-100" type="button" onclick="document.getElementById('callsigns-modal').classList.add('show')">View more ({{ all_callsigns|length }})</button>
+            {% endif %}
+        </div>{% endif %}
+
+        {% if period_stats.has_data %}<div class="card-dark stats-card"><h5 class="mb-3">Period Stats</h5>
+            <div class="d-flex justify-content-between mb-2"><div>Total hours</div><div><b>{{ period_stats.total_hhmm }}</b></div></div>
+            {% if period_stats.home_name %}
+            <div class="d-flex justify-content-between mb-2">
+                <div class="home-row">
+                    <span class="flag-group">{% for f in period_stats.home_flags %}<img class="flag" src="https://flagcdn.com/w40/{{ f }}.png">{% endfor %}</span>
+                    Home: <b>{{ period_stats.home_name }}</b>
+                    {% if period_stats.is_manual %}<span class="home-manual-badge">manual</span>{% endif %}
+                    <button type="button" class="home-change-btn" onclick="document.getElementById('home-modal').classList.add('show')">change</button>
+                </div>
+                <div>{{ period_stats.home_hhmm }}</div>
+            </div>
+            <div class="d-flex justify-content-between mb-2"><div>Visiting (rest)</div><div>{{ period_stats.visiting_hhmm }}</div></div>
+            {% if period_stats.home_meets_50 %}
+            <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                <div><span class="badge bg-success">OK</span> Above 50%</div>
+                <div>+{{ period_stats.home_buffer_hhmm }} buffer</div>
+            </div>
+            {% else %}
+            <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                <div><span class="badge bg-danger">NO</span> Below 50%</div>
+                <div>Need +{{ period_stats.home_need_hhmm }} in home</div>
+            </div>
+            {% endif %}
+
+            {% if goal_calc and goal_calc.needed_min > 0 %}
+            <div class="mt-2 pt-2 border-top" style="font-size:13px;">
+                🎯 Total needed: <b>{{ goal_calc.needed_hhmm }}</b>
+                <ul style="margin:6px 0 0 18px;padding:0;">
+                    {% if goal_calc.home_50_now_hhmm != "00:00" %}
+                    <li>To reach 50% in HOME now: <b>{{ goal_calc.home_50_now_hhmm }}</b></li>
+                    {% endif %}
+                    {% if goal_calc.home_min_need_hhmm != "00:00" %}
+                    <li>To reach 3h in HOME: <b>{{ goal_calc.home_min_need_hhmm }}</b></li>
+                    {% endif %}
+                    {% if goal_calc.visiting_need_hhmm != "00:00" %}
+                    <li>To reach 3h in all visiting divisions: <b>{{ goal_calc.visiting_need_hhmm }}</b></li>
+                    {% endif %}
+                </ul>
+                {% if goal_calc.home_for_50_total_hhmm != "00:00" %}
+                <div class="goal-note">
+                    📌 Note: once every division reaches 3h, you will need a total of <b>{{ goal_calc.home_for_50_total_hhmm }}</b> extra in HOME to stay above 50% (this already includes what is currently missing in HOME).
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if excluded %}
+<div class="card-dark" style="border-color:#6c757d;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div><small>🚫 Excluded from calculations:</small></div>
+        <div class="d-flex flex-wrap gap-2">
+            {% for name in excluded %}<span class="badge bg-secondary" style="cursor:pointer;" onclick="toggleDivisionByName('{{ name }}', true)" title="Click to include again">{{ name }} ✕</span>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% for i in results %}
+<div class="card-dark">
+    <div class="d-flex justify-content-between">
+        <div class="div-card-header">
+            <input type="checkbox" class="div-toggle" checked data-name="{{ i.name }}" onchange="toggleDivision(this)" title="Uncheck to exclude">
+            <span class="flag-group">{% for f in i.flags %}<img class="flag" src="https://flagcdn.com/w40/{{ f }}.png">{% endfor %}</span>
+            <b>{{ i.name }}</b>
+        </div>
+        <div>{% if i.status %}<span class="badge bg-success">OK</span>{% else %}<span class="badge bg-danger">NO</span>{% endif %}</div>
+    </div>
+    <small>{{ i.hours_hhmm }} | {{ i.percent }}% | Min: {{ i.minimum_hhmm }} | Exp: {{ i.expiry }}</small>
+    <div class="last-controlled">Last controlled: {{ i.last_controlled }}</div>
+    <div class="progress mt-1"><div class="progress-bar" data-percent="{{ i.percent }}">{{ i.percent }}%</div></div>
+</div>
+{% endfor %}
+</div>
+
+<div class="card-dark" style="text-align:center;font-size:13px;max-width:900px;margin:20px auto;">
+    💛 Support the development of this dashboard — donations welcome<br>
+    <b>IBAN:</b> <code>CZ69 0800 0000 0053 9882 2073</code>
+</div>
+
+<div id="callsigns-modal" class="cs-modal" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="cs-modal-box">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="m-0">All Callsigns ({{ all_callsigns|length }})</h5>
+            <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('callsigns-modal').classList.remove('show')">✕</button>
+        </div>
+        <div class="cs-modal-list">
+            {% for c in all_callsigns %}
+            <div class="cs-modal-row">
+                <div><b>{{ c.callsign }}</b></div>
+                <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="home-modal" class="cs-modal" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="cs-modal-box">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="m-0">Select Home Division</h5>
+            <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('home-modal').classList.remove('show')">✕</button>
+        </div>
+        <small style="margin-bottom:10px;display:block;">The system auto-picks the division with most hours. Choose manually if it's wrong. Click "Auto" to reset.</small>
+        <div class="home-modal-list">
+            <div class="home-option {% if not home_override %}active{% endif %}" onclick="setHome('')">
+                <div><b>🔄 Auto</b> <small style="margin-left:6px;">(division with most hours)</small></div>
+                <div>{% if not home_override %}✓{% endif %}</div>
+            </div>
+            {% for name in selectable_homes %}
+            <div class="home-option {% if home_override == name %}active{% endif %}" onclick="setHome('{{ name }}')">
+                <div><b>{{ name }}</b></div>
+                <div>{% if home_override == name %}✓{% endif %}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function applyTheme(m){document.body.classList.toggle("light",m==="light");document.documentElement.classList.remove("preload-light");var b=document.querySelector(".theme-toggle");if(b)b.textContent=m==="light"?"☀️":"🌙"}
+function getEff(){var s=localStorage.getItem("theme");if(s==="light"||s==="dark")return s;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?"light":"dark"}
+function toggleTheme(){var n=getEff()==="dark"?"light":"dark";localStorage.setItem("theme",n);applyTheme(n)}
+applyTheme(getEff());
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: light)');var l=function(e){if(!localStorage.getItem("theme"))applyTheme(e.matches?"light":"dark")};if(mq.addEventListener)mq.addEventListener("change",l);else mq.addListener(l)}
+var overlay=document.getElementById("loading-overlay");
+function showLoading(){if(overlay)overlay.classList.add("show")}
+function hideLoading(){if(overlay)overlay.classList.remove("show")}
+document.querySelectorAll('a[href^="/"]').forEach(function(a){a.addEventListener("click",function(e){if(e.ctrlKey||e.metaKey||e.shiftKey||e.button!==0)return;showLoading()})});
+var form=document.getElementById("cid-form");
+if(form)form.addEventListener("submit",function(){showLoading()});
+window.addEventListener("pageshow",function(e){if(e.persisted)hideLoading()});
+window.addEventListener("load",function(){setTimeout(function(){document.querySelectorAll(".progress-bar[data-percent]").forEach(function(b){var p=b.getAttribute("data-percent");if(p)b.style.width=p+"%"})},100)});
+
+function getCurrentExcluded(){var p=new URLSearchParams(window.location.search);var r=p.get("exclude")||"";return new Set(r.split("|").filter(Boolean))}
+function applyExclude(set){var url=new URL(window.location.href);var v=Array.from(set).join("|");if(v)url.searchParams.set("exclude",v);else url.searchParams.delete("exclude");showLoading();window.location.href=url.toString()}
+function toggleDivision(cb){var n=cb.getAttribute("data-name");var s=getCurrentExcluded();if(cb.checked)s.delete(n);else s.add(n);applyExclude(s)}
+function toggleDivisionByName(n,inc){var s=getCurrentExcluded();if(inc)s.delete(n);else s.add(n);applyExclude(s)}
+function setHome(name){var url=new URL(window.location.href);if(name)url.searchParams.set("home",name);else url.searchParams.delete("home");showLoading();window.location.href=url.toString()}
+
+{% if all_fulfilled %}
+window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
+{% endif %}
+
+function exportPDF(){var el=document.getElementById("dashboard-content");var pilot="{{ pilot_name|default('') }}".trim();var cid="{{ request.args.get('cid','') }}";var fn="vatsim-"+(cid||"dashboard")+(pilot?"-"+pilot.replace(/\s+/g,"_"):"")+".pdf";document.body.classList.add("pdf-export");document.querySelectorAll(".progress-bar[data-percent]").forEach(function(b){b.style.width=b.getAttribute("data-percent")+"%"});var opt={margin:[8,8,8,8],filename:fn,image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true,backgroundColor:document.body.classList.contains("light")?"#f5f5f5":"#0d1117"},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}};showLoading();html2pdf().set(opt).from(el).save().then(function(){document.body.classList.remove("pdf-export");hideLoading()}).catch(function(){document.body.classList.remove("pdf-export");hideLoading()})}
+</script>
+</body></html>
