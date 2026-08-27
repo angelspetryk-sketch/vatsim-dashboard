@@ -74,7 +74,8 @@ def calc_streaks(daily, today):
 
 def build_heatmap(all_sessions):
     today = datetime.utcnow().date(); start = today - timedelta(days=364)
-    daily = defaultdict(float); daily_sessions = defaultdict(list)
+    daily = defaultdict(float)
+    daily_sessions = defaultdict(list)
     for s in all_sessions:
         d = s["start_dt"].date()
         if start <= d <= today:
@@ -94,6 +95,7 @@ def build_heatmap(all_sessions):
                     r = m / max_min if max_min else 0
                     lvl = 4 if r >= 0.75 else 3 if r >= 0.5 else 2 if r >= 0.25 else 1
                 week.append({"date_pretty": current.strftime("%b %d, %Y"),"hhmm": format_hhmm(m),"minutes": m,"level": lvl,"in_range": True,"sessions": daily_sessions.get(current, [])})
+                week.append({"date": current.strftime("%Y-%m-%d"),"date_pretty": current.strftime("%b %d, %Y"),"hhmm": format_hhmm(m),"minutes": m,"level": lvl,"in_range": True,"sessions": daily_sessions.get(current, [])})
                 if wf is None: wf = current
             else: week.append({"in_range": False, "level": -1})
             current += timedelta(days=1)
