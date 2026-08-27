@@ -179,8 +179,8 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
             <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{{ ml.col * 15 }}px;">{{ ml.label }}</span>{% endfor %}</div>
             <div class="heatmap-body">
                 <div class="heatmap-days-col"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-                <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}
-            </div>
+                <<div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}
+                </div>
             <div class="heatmap-legend"><span>Less</span><div class="heatmap-cell l0" style="display:inline-block;"></div><div class="heatmap-cell l1" style="display:inline-block;"></div><div class="heatmap-cell l2" style="display:inline-block;"></div><div class="heatmap-cell l3" style="display:inline-block;"></div><div class="heatmap-cell l4" style="display:inline-block;"></div><span>More</span></div>
         </div>
         <div class="streaks-row">
