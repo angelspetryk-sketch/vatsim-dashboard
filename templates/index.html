@@ -125,33 +125,33 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
     <h1>VATSIM Dashboard</h1>
     <div class="disclaimer">Limits shown for each division are not officially verified and should be taken as guidance only.</div>
     <div class="d-flex gap-2">
-        <span class="badge bg-success">Fulfilled: { fulfilled_count }</span>
-        <span class="badge bg-danger">Not fulfilled: { not_fulfilled_count }</span>
+        <span class="badge bg-success">Fulfilled: {{ fulfilled_count }}</span>
+        <span class="badge bg-danger">Not fulfilled: {{ not_fulfilled_count }}</span>
     </div>
     {% if all_fulfilled %}<div class="celebration-banner show">🎉 All divisions fulfilled — great job! 🎉</div>{% endif %}
-    {% if pilot_name %}<div><span class="badge bg-secondary">{ pilot_name } ({ request.args.get('cid') })</span></div>{% endif %}
+    {% if pilot_name %}<div><span class="badge bg-secondary">{{ pilot_name }} ({{ request.args.get('cid') }})</span></div>{% endif %}
     {% if live_status.online %}
-        <div><span class="badge bg-success live-badge">🟢 LIVE: <b>{ live_status.callsign }</b> · { live_status.frequency }</span></div>
+        <div><span class="badge bg-success live-badge">🟢 LIVE: <b>{{ live_status.callsign }}</b> · {{ live_status.frequency }}</span></div>
     {% else %}
         <div><span class="badge bg-secondary" style="font-size:11px;">⚫ Offline</span></div>
     {% endif %}
     <form method="GET" class="my-2 d-flex justify-content-center gap-2 w-100" id="cid-form" style="max-width:600px;">
-        <input type="hidden" name="mode" value="{ mode }">
-        <input type="hidden" name="sort" value="{ request.args.get('sort','hours') }">
-        {% if excluded %}<input type="hidden" name="exclude" value="{ excluded|join('|') }">{% endif %}
-        {% if home_override %}<input type="hidden" name="home" value="{ home_override }">{% endif %}
-        <input class="form-control text-center" name="cid" placeholder="Enter CID" value="{ request.args.get('cid','') }">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <input type="hidden" name="sort" value="{{ request.args.get('sort','hours') }}">
+        {% if excluded %}<input type="hidden" name="exclude" value="{{ excluded|join('|') }}">{% endif %}
+        {% if home_override %}<input type="hidden" name="home" value="{{ home_override }}">{% endif %}
+        <input class="form-control text-center" name="cid" placeholder="Enter CID" value="{{ request.args.get('cid','') }}">
         <button class="btn btn-primary" type="submit">Load</button>
     </form>
     {% set exc = excluded|join('|') %}
     {% set ho = home_override %}
     <div class="controls">
-        <a class="btn btn-sm {% if request.args.get('sort','hours')=='hours' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=hours&mode={ mode }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">Hours</a>
-        <a class="btn btn-sm {% if request.args.get('sort')=='expiry' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=expiry&mode={ mode }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">Expiry</a>
-        <a class="btn btn-sm {% if request.args.get('sort')=='last' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=last&mode={ mode }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">Last Controlled</a>
-        <a class="btn btn-sm {% if mode=='rolling' %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode=rolling&sort={ request.args.get('sort','hours') }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">Rolling 3M</a>
-        {% for h in ['h1','h2'] %}{% if h in available_periods %}<a class="btn btn-sm {% if mode==h %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={ h }&sort={ request.args.get('sort','hours') }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">{ h|upper }</a>{% endif %}{% endfor %}
-        {% for q in ['q1','q2','q3','q4'] %}{% if q in available_quarters %}<a class="btn btn-sm {% if mode==q %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={ q }&sort={ request.args.get('sort','hours') }&cid={ request.args.get('cid','') }{% if exc %}&exclude={ exc }{% endif %}{% if ho %}&home={ ho }{% endif %}">{ q|upper }</a>{% endif %}{% endfor %}
+        <a class="btn btn-sm {% if request.args.get('sort','hours')=='hours' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=hours&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Hours</a>
+        <a class="btn btn-sm {% if request.args.get('sort')=='expiry' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=expiry&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Expiry</a>
+        <a class="btn btn-sm {% if request.args.get('sort')=='last' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=last&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Last Controlled</a>
+        <a class="btn btn-sm {% if mode=='rolling' %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode=rolling&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Rolling 3M</a>
+        {% for h in ['h1','h2'] %}{% if h in available_periods %}<a class="btn btn-sm {% if mode==h %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ h }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ h|upper }}</a>{% endif %}{% endfor %}
+        {% for q in ['q1','q2','q3','q4'] %}{% if q in available_quarters %}<a class="btn btn-sm {% if mode==q %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ q }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ q|upper }}</a>{% endif %}{% endfor %}
     </div>
 </div>
 
@@ -159,15 +159,15 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div class="card-dark countdown-card">
     <div class="countdown-head">
         <div>
-            <span style="font-size:15px;font-weight:bold;">⏳ { period_countdown.label } ends { period_countdown.end_date }</span>
-            <small style="display:block;margin-top:2px;">{ period_countdown.days_elapsed } / { period_countdown.total_days } days elapsed ({ period_countdown.pct_elapsed }%)</small>
+            <span style="font-size:15px;font-weight:bold;">⏳ {{ period_countdown.label }} ends {{ period_countdown.end_date }}</span>
+            <small style="display:block;margin-top:2px;">{{ period_countdown.days_elapsed }} / {{ period_countdown.total_days }} days elapsed ({{ period_countdown.pct_elapsed }}%)</small>
         </div>
         <div class="countdown-days {% if period_countdown.days_left <= 7 %}urgent{% elif period_countdown.days_left <= 21 %}warn{% endif %}">
-            {% if period_countdown.is_over %}Period ended{% else %}{ period_countdown.days_left } days left{% endif %}
+            {% if period_countdown.is_over %}Period ended{% else %}{{ period_countdown.days_left }} days left{% endif %}
         </div>
     </div>
     <div class="countdown-bar">
-        <div class="countdown-bar-inner {% if period_countdown.days_left <= 7 %}urgent{% elif period_countdown.days_left <= 21 %}warn{% endif %}" style="width:{ period_countdown.pct_elapsed }%"></div>
+        <div class="countdown-bar-inner {% if period_countdown.days_left <= 7 %}urgent{% elif period_countdown.days_left <= 21 %}warn{% endif %}" style="width:{{ period_countdown.pct_elapsed }}%"></div>
     </div>
 </div>
 {% endif %}
@@ -176,20 +176,20 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div class="card-dark heatmap-wrap">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="m-0">Activity (last 12 months)</h5>
-        <small>{ heatmap.total_hhmm } total • { heatmap.active_days } active days</small>
+        <small>{{ heatmap.total_hhmm }} total • {{ heatmap.active_days }} active days</small>
     </div>
     <div class="heatmap-inner">
-        <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{ ml.col * 15 }px;">{ ml.label }</span>{% endfor %}</div>
+        <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{{ ml.col * 15 }}px;">{{ ml.label }}</span>{% endfor %}</div>
         <div class="heatmap-body">
             <div class="heatmap-days-col"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-            <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{ day.level }" style="cursor:pointer;" onclick='showDay({ day.sessions|tojson },"{ day.date_pretty }","{ day.hhmm }")' title="{ day.date_pretty } — { day.hhmm }"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
+            <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
         </div>
         <div class="heatmap-legend"><span>Less</span><div class="heatmap-cell l0" style="display:inline-block;"></div><div class="heatmap-cell l1" style="display:inline-block;"></div><div class="heatmap-cell l2" style="display:inline-block;"></div><div class="heatmap-cell l3" style="display:inline-block;"></div><div class="heatmap-cell l4" style="display:inline-block;"></div><span>More</span></div>
     </div>
     <div class="streaks-row">
-        <div class="streak-item"><span class="icon">🔥</span><span>Current streak: <span class="val">{ heatmap.current_streak }d</span></span></div>
-        <div class="streak-item"><span class="icon">🏆</span><span>Best streak: <span class="val">{ heatmap.best_streak }d</span></span></div>
-        <div class="streak-item"><span class="icon">💤</span><span>Longest break: <span class="val">{ heatmap.longest_break }d</span></span></div>
+        <div class="streak-item"><span class="icon">🔥</span><span>Current streak: <span class="val">{{ heatmap.current_streak }}d</span></span></div>
+        <div class="streak-item"><span class="icon">🏆</span><span>Best streak: <span class="val">{{ heatmap.best_streak }}d</span></span></div>
+        <div class="streak-item"><span class="icon">💤</span><span>Longest break: <span class="val">{{ heatmap.longest_break }}d</span></span></div>
     </div>
 </div>
 {% endif %}
@@ -198,56 +198,56 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
     {% if top_callsigns %}
     <div class="card-dark stats-card">
         <h5 class="mb-3">Top Callsigns</h5>
-        {% for c in top_callsigns %}<div class="d-flex justify-content-between mb-2"><div><b>{ c.callsign }</b></div><div>{ c.hours_hhmm } • { c.sessions } sessions</div></div>{% endfor %}
+        {% for c in top_callsigns %}<div class="d-flex justify-content-between mb-2"><div><b>{{ c.callsign }}</b></div><div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div></div>{% endfor %}
         {% if all_callsigns|length > 5 %}
-        <button class="btn btn-sm btn-outline-light mt-2 w-100" type="button" onclick="document.getElementById('callsigns-modal').classList.add('show')">View more ({ all_callsigns|length })</button>
+        <button class="btn btn-sm btn-outline-light mt-2 w-100" type="button" onclick="document.getElementById('callsigns-modal').classList.add('show')">View more ({{ all_callsigns|length }})</button>
         {% endif %}
     </div>
     {% endif %}
     {% if period_stats.has_data %}
     <div class="card-dark stats-card">
         <h5 class="mb-3">Period Stats</h5>
-        <div class="d-flex justify-content-between mb-2"><div>Total hours</div><div><b>{ period_stats.total_hhmm }</b></div></div>
+        <div class="d-flex justify-content-between mb-2"><div>Total hours</div><div><b>{{ period_stats.total_hhmm }}</b></div></div>
         {% if period_stats.home_name %}
         <div class="d-flex justify-content-between mb-2">
             <div class="home-row">
-                <span class="flag-group">{% for f in period_stats.home_flags %}<img class="flag" src="https://flagcdn.com/w40/{ f }.png">{% endfor %}</span>
-                Home: <b>{ period_stats.home_name }</b>
+                <span class="flag-group">{% for f in period_stats.home_flags %}<img class="flag" src="https://flagcdn.com/w40/{{ f }}.png">{% endfor %}</span>
+                Home: <b>{{ period_stats.home_name }}</b>
                 {% if period_stats.is_manual %}<span class="home-manual-badge">manual</span>{% endif %}
                 <button type="button" class="home-change-btn" onclick="document.getElementById('home-modal').classList.add('show')">change</button>
             </div>
-            <div>{ period_stats.home_hhmm }</div>
+            <div>{{ period_stats.home_hhmm }}</div>
         </div>
-        <div class="d-flex justify-content-between mb-2"><div>Visiting (rest)</div><div>{ period_stats.visiting_hhmm }</div></div>
+        <div class="d-flex justify-content-between mb-2"><div>Visiting (rest)</div><div>{{ period_stats.visiting_hhmm }}</div></div>
         {% if period_stats.home_meets_50 %}
         <div class="d-flex justify-content-between mt-2 pt-2 border-top">
             <div><span class="badge bg-success">OK</span> Above 50%</div>
-            <div>+{ period_stats.home_buffer_hhmm } buffer</div>
+            <div>+{{ period_stats.home_buffer_hhmm }} buffer</div>
         </div>
         {% else %}
         <div class="d-flex justify-content-between mt-2 pt-2 border-top">
             <div><span class="badge bg-danger">NO</span> Below 50%</div>
-            <div>Need +{ period_stats.home_need_hhmm } in home</div>
+            <div>Need +{{ period_stats.home_need_hhmm }} in home</div>
         </div>
         {% endif %}
         {% if goal_calc and goal_calc.needed_min > 0 %}
         <div class="mt-2 pt-2 border-top" style="font-size:13px;">
-            🎯 Total needed: <b>{ goal_calc.needed_hhmm }</b>
+            🎯 Total needed: <b>{{ goal_calc.needed_hhmm }}</b>
             <ul style="margin:6px 0 0 18px;padding:0;">
-                {% if goal_calc.home_50_now_hhmm != "00:00" %}<li>To reach 50% in HOME now: <b>{ goal_calc.home_50_now_hhmm }</b></li>{% endif %}
-                {% if goal_calc.home_min_need_hhmm != "00:00" %}<li>To reach 3h in HOME: <b>{ goal_calc.home_min_need_hhmm }</b></li>{% endif %}
-                {% if goal_calc.visiting_need_hhmm != "00:00" %}<li>To reach 3h in all visiting divisions: <b>{ goal_calc.visiting_need_hhmm }</b></li>{% endif %}
+                {% if goal_calc.home_50_now_hhmm != "00:00" %}<li>To reach 50% in HOME now: <b>{{ goal_calc.home_50_now_hhmm }}</b></li>{% endif %}
+                {% if goal_calc.home_min_need_hhmm != "00:00" %}<li>To reach 3h in HOME: <b>{{ goal_calc.home_min_need_hhmm }}</b></li>{% endif %}
+                {% if goal_calc.visiting_need_hhmm != "00:00" %}<li>To reach 3h in all visiting divisions: <b>{{ goal_calc.visiting_need_hhmm }}</b></li>{% endif %}
             </ul>
             {% if goal_calc.home_for_50_total_hhmm != "00:00" %}
             <div class="goal-note">
-                📌 Note: once every division reaches 3h, you will need a total of <b>{ goal_calc.home_for_50_total_hhmm }</b> extra in HOME to stay above 50% (this already includes what is currently missing in HOME).
+                📌 Note: once every division reaches 3h, you will need a total of <b>{{ goal_calc.home_for_50_total_hhmm }}</b> extra in HOME to stay above 50% (this already includes what is currently missing in HOME).
             </div>
             {% endif %}
         </div>
         {% endif %}
         {% if goal_calc and goal_calc.visiting_afford_min and goal_calc.visiting_afford_min > 0 %}
         <div class="mt-2 pt-2 border-top" style="font-size:13px;">
-            ✈️ All requirements met! You can still control <b>{ goal_calc.visiting_afford_hhmm }</b> in visiting divisions and stay above 50% in HOME.
+            ✈️ All requirements met! You can still control <b>{{ goal_calc.visiting_afford_hhmm }}</b> in visiting divisions and stay above 50% in HOME.
         </div>
         {% endif %}
         {% endif %}
@@ -260,7 +260,7 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div><small>🚫 Excluded from calculations:</small></div>
         <div class="d-flex flex-wrap gap-2">
-            {% for name in excluded %}<span class="badge bg-secondary" style="cursor:pointer;" onclick="toggleDivisionByName('{ name }', true)" title="Click to include again">{ name } ✕</span>{% endfor %}
+            {% for name in excluded %}<span class="badge bg-secondary" style="cursor:pointer;" onclick="toggleDivisionByName('{{ name }}', true)" title="Click to include again">{{ name }} ✕</span>{% endfor %}
         </div>
     </div>
 </div>
@@ -270,15 +270,15 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div class="card-dark">
     <div class="d-flex justify-content-between">
         <div class="div-card-header">
-            <input type="checkbox" class="div-toggle" checked data-name="{ i.name }" onchange="toggleDivision(this)" title="Uncheck to exclude">
-            <span class="flag-group">{% for f in i.flags %}<img class="flag" src="https://flagcdn.com/w40/{ f }.png">{% endfor %}</span>
-            <b>{ i.name }</b>
+            <input type="checkbox" class="div-toggle" checked data-name="{{ i.name }}" onchange="toggleDivision(this)" title="Uncheck to exclude">
+            <span class="flag-group">{% for f in i.flags %}<img class="flag" src="https://flagcdn.com/w40/{{ f }}.png">{% endfor %}</span>
+            <b>{{ i.name }}</b>
         </div>
         <div>{% if i.status %}<span class="badge bg-success">OK</span>{% else %}<span class="badge bg-danger">NO</span>{% endif %}</div>
     </div>
-    <small>{ i.hours_hhmm } | { i.percent }% | Min: { i.minimum_hhmm } | Exp: { i.expiry }</small>
-    <div class="last-controlled">Last controlled: { i.last_controlled }</div>
-    <div class="progress mt-1"><div class="progress-bar" data-percent="{ i.percent }">{ i.percent }%</div></div>
+    <small>{{ i.hours_hhmm }} | {{ i.percent }}% | Min: {{ i.minimum_hhmm }} | Exp: {{ i.expiry }}</small>
+    <div class="last-controlled">Last controlled: {{ i.last_controlled }}</div>
+    <div class="progress mt-1"><div class="progress-bar" data-percent="{{ i.percent }}">{{ i.percent }}%</div></div>
 </div>
 {% endfor %}
 
@@ -292,14 +292,14 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div id="callsigns-modal" class="cs-modal" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="cs-modal-box">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="m-0">All Callsigns ({ all_callsigns|length })</h5>
+            <h5 class="m-0">All Callsigns ({{ all_callsigns|length }})</h5>
             <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('callsigns-modal').classList.remove('show')">✕</button>
         </div>
         <div class="cs-modal-list">
             {% for c in all_callsigns %}
             <div class="cs-modal-row">
-                <div><b>{ c.callsign }</b></div>
-                <div>{ c.hours_hhmm } • { c.sessions } sessions</div>
+                <div><b>{{ c.callsign }}</b></div>
+                <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
             </div>
             {% endfor %}
         </div>
@@ -319,8 +319,8 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
                 <div>{% if not home_override %}✓{% endif %}</div>
             </div>
             {% for name in selectable_homes %}
-            <div class="home-option {% if home_override == name %}active{% endif %}" onclick="setHome('{ name }')">
-                <div><b>{ name }</b></div>
+            <div class="home-option {% if home_override == name %}active{% endif %}" onclick="setHome('{{ name }}')">
+                <div><b>{{ name }}</b></div>
                 <div>{% if home_override == name %}✓{% endif %}</div>
             </div>
             {% endfor %}
@@ -361,13 +361,13 @@ function shareURL(btn){navigator.clipboard.writeText(window.location.href).then(
 function showDay(sess,date,total){var b=document.getElementById("day-modal-body");document.getElementById("day-modal-title").textContent=date+" — "+total;if(!sess||!sess.length){b.innerHTML='<div style="padding:20px;text-align:center;color:#9ca3af;">No activity</div>'}else{b.innerHTML=sess.map(function(s){return '<div class="cs-modal-row"><div><b>'+s.callsign+'</b></div><div>'+s.hhmm+'</div></div>'}).join('')}document.getElementById("day-modal").classList.add("show")}
 
 {% if all_fulfilled %}
-window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{ request.args.get('cid','') }:{ mode }";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
+window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
 {% endif %}
 
 function exportPDF(){
     var el=document.getElementById("dashboard-content");
-    var pilot="{ pilot_name|default('') }".trim();
-    var cid="{ request.args.get('cid','') }";
+    var pilot="{{ pilot_name|default('') }}".trim();
+    var cid="{{ request.args.get('cid','') }}";
     var fn="vatsim-"+(cid||"dashboard")+(pilot?"-"+pilot.replace(/\s+/g,"_"):"")+".pdf";
     document.body.classList.add("pdf-export");
     document.querySelectorAll(".progress-bar[data-percent]").forEach(function(b){b.style.width=b.getAttribute("data-percent")+"%"});
@@ -384,3 +384,5 @@ function exportPDF(){
 }
 </script>
 </body></html>
+
+
