@@ -179,7 +179,7 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
             <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{{ ml.col * 15 }}px;">{{ ml.label }}</span>{% endfor %}</div>
             <div class="heatmap-body">
                 <div class="heatmap-days-col"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-                <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" title="{{ day.date }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
+                <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}
             </div>
             <div class="heatmap-legend"><span>Less</span><div class="heatmap-cell l0" style="display:inline-block;"></div><div class="heatmap-cell l1" style="display:inline-block;"></div><div class="heatmap-cell l2" style="display:inline-block;"></div><div class="heatmap-cell l3" style="display:inline-block;"></div><div class="heatmap-cell l4" style="display:inline-block;"></div><span>More</span></div>
         </div>
@@ -319,6 +319,15 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
         </div>
     </div>
 </div>
+<div id="day-modal" class="cs-modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="cs-modal-box">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="m-0" id="day-modal-title">Day</h5>
+      <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('day-modal').classList.remove('show')">✕</button>
+    </div>
+    <div class="cs-modal-list" id="day-modal-body"></div>
+  </div>
+</div>
 <script>
 function applyTheme(m){document.body.classList.toggle("light",m==="light");document.documentElement.classList.remove("preload-light");var b=document.querySelector(".theme-toggle");if(b)b.textContent=m==="light"?"☀️":"🌙"}
 function getEff(){var s=localStorage.getItem("theme");if(s==="light"||s==="dark")return s;return window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?"light":"dark"}
@@ -339,6 +348,8 @@ function toggleDivision(cb){var n=cb.getAttribute("data-name");var s=getCurrentE
 function toggleDivisionByName(n,inc){var s=getCurrentExcluded();if(inc)s.delete(n);else s.add(n);applyExclude(s)}
 function setHome(name){var url=new URL(window.location.href);if(name)url.searchParams.set("home",name);else url.searchParams.delete("home");showLoading();window.location.href=url.toString()}
 function shareURL(btn){navigator.clipboard.writeText(window.location.href).then(function(){var o=btn.textContent;btn.textContent="✅ Copied!";setTimeout(function(){btn.textContent=o},1500)})}
+function showDay(sess,date,total){var b=document.getElementById("day-modal-body");document.getElementById("day-modal-title").textContent=date+" — "+total;if(!sess||!sess.length){b.innerHTML='<div style="padding:20px;text-align:center;color:#9ca3af;">No activity</div>'}else{b.innerHTML=sess.map(function(s){return '<div class="cs-modal-row"><div><b>'+s.callsign+'</b></div><div>'+s.hhmm+'</div></div>'}).join('')}document.getElementById("day-modal").classList.add("show")}
+
 
 {% if all_fulfilled %}
 window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
