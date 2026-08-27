@@ -106,6 +106,10 @@ body.light .home-change-btn{color:#1d4ed8}
 body.light .home-option{border-color:#ddd}
 body.light .home-option:hover{background:#e0e7ff;border-color:#1f6feb;color:#111}
 body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#111}
+.share-btn{position:fixed;top:16px;right:130px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.pdf-export .share-btn{display:none!important}
+.live-badge{font-size:13px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 </style></head><body>
     <div class="card-dark" style="text-align:center;font-size:13px;max-width:900px;margin:20px auto;">
     💛 Support the development of this dashboard — donations welcome<br>
@@ -115,6 +119,8 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div id="loading-overlay"><div class="spinner-ring"></div><div>Loading VATSIM data…</div></div>
 <button class="btn btn-primary export-btn" onclick="exportPDF()">📄 PDF</button>
 <button class="btn btn-warning theme-toggle" onclick="toggleTheme()">🌙</button>
+<button class="btn btn-info share-btn" onclick="shareURL(this)">🔗 Share</button>
+
 
 <div class="container mt-4" id="dashboard-content">
 <div class="header-box">
@@ -126,6 +132,11 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
     </div>
     {% if all_fulfilled %}<div class="celebration-banner show">🎉 All divisions fulfilled — great job! 🎉</div>{% endif %}
     {% if pilot_name %}<div><span class="badge bg-secondary">{{ pilot_name }} ({{ request.args.get('cid') }})</span></div>{% endif %}
+    {% if live_status.online %}
+<div><span class="badge bg-success live-badge">🟢 LIVE: <b>{{ live_status.callsign }}</b> · {{ live_status.frequency }}</span></div>
+{% else %}
+<div><span class="badge bg-secondary" style="font-size:11px;">⚫ Offline</span></div>
+{% endif %}
 
     <form method="GET" class="my-2 d-flex justify-content-center gap-2 w-100" id="cid-form" style="max-width:600px;">
         <input type="hidden" name="mode" value="{{ mode }}">
@@ -232,6 +243,11 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
                     {% if goal_calc.visiting_need_hhmm != "00:00" %}
                     <li>To reach 3h in all visiting divisions: <b>{{ goal_calc.visiting_need_hhmm }}</b></li>
                     {% endif %}
+                    {% if goal_calc and goal_calc.visiting_afford_min and goal_calc.visiting_afford_min > 0 %}
+<div class="mt-2 pt-2 border-top" style="font-size:13px;">
+    ✈️ All requirements met! You can still fly <b>{{ goal_calc.visiting_afford_hhmm }}</b> in visiting divisions and stay above 50% in HOME.
+</div>
+{% endif %}
                 </ul>
                 {% if goal_calc.home_for_50_total_hhmm != "00:00" %}
                 <div class="goal-note">
@@ -339,6 +355,8 @@ function applyExclude(set){var url=new URL(window.location.href);var v=Array.fro
 function toggleDivision(cb){var n=cb.getAttribute("data-name");var s=getCurrentExcluded();if(cb.checked)s.delete(n);else s.add(n);applyExclude(s)}
 function toggleDivisionByName(n,inc){var s=getCurrentExcluded();if(inc)s.delete(n);else s.add(n);applyExclude(s)}
 function setHome(name){var url=new URL(window.location.href);if(name)url.searchParams.set("home",name);else url.searchParams.delete("home");showLoading();window.location.href=url.toString()}
+function shareURL(btn){navigator.clipboard.writeText(window.location.href).then(function(){var o=btn.textContent;btn.textContent="✅ Copied!";setTimeout(function(){btn.textContent=o},1500)})}
+
 
 {% if all_fulfilled %}
 window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
