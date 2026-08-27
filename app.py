@@ -94,9 +94,18 @@ def build_heatmap(all_sessions):
                 else:
                     r = m / max_min if max_min else 0
                     lvl = 4 if r >= 0.75 else 3 if r >= 0.5 else 2 if r >= 0.25 else 1
-                week.append({"date": current.strftime("%Y-%m-%d"), "date_pretty": current.strftime("%b %d, %Y"),"hhmm": format_hhmm(m),"minutes": m,"level": lvl,"in_range": True,"sessions": daily_sessions.get(current, [])})
+                week.append({
+                    "date": current.strftime("%Y-%m-%d"),
+                    "date_pretty": current.strftime("%b %d, %Y"),
+                    "hhmm": format_hhmm(m),
+                    "minutes": m,
+                    "level": lvl,
+                    "in_range": True,
+                    "sessions": daily_sessions.get(current, [])
+                })
                 if wf is None: wf = current
-            else: week.append({"in_range": False, "level": -1})
+            else:
+                week.append({"in_range": False, "level": -1})
             current += timedelta(days=1)
         if wf:
             mn = wf.strftime("%b")
@@ -105,7 +114,9 @@ def build_heatmap(all_sessions):
         weeks.append(week)
     tm = sum(daily.values()); ad = sum(1 for v in daily.values() if v > 0)
     st = calc_streaks(daily, today)
-    return {"weeks": weeks, "month_labels": month_labels, "total_hhmm": format_hhmm(tm),"active_days": ad, "current_streak": st["current"], "best_streak": st["best"],"longest_break": st["longest_break"], "has_data": tm > 0}
+    return {"weeks": weeks, "month_labels": month_labels, "total_hhmm": format_hhmm(tm),
+            "active_days": ad, "current_streak": st["current"], "best_streak": st["best"],
+            "longest_break": st["longest_break"], "has_data": tm > 0}
 
 GROUPS = {
     "VATSIM Germany": {"prefixes": ("ED",), "min_hours": 3, "flags": ["de"]},
@@ -227,7 +238,11 @@ def home():
     home_buffer = max(home_minutes - visiting_minutes, 0)
     home_need = max(visiting_minutes - home_minutes, 0)
     home_flags = GROUPS[home_name]["flags"] if home_name and home_name in GROUPS else []
-    period_stats = {"total_hhmm": format_hhmm(total_all_minutes), "home_name": home_name,"home_flags": home_flags, "home_hhmm": format_hhmm(home_minutes),"visiting_hhmm": format_hhmm(visiting_minutes), "home_meets_50": home_meets_50,"home_buffer_hhmm": format_hhmm(home_buffer), "home_need_hhmm": format_hhmm(home_need),"has_data": total_all_minutes > 0, "is_manual": home_is_manual}
+    period_stats = {"total_hhmm": format_hhmm(total_all_minutes), "home_name": home_name,
+                    "home_flags": home_flags, "home_hhmm": format_hhmm(home_minutes),
+                    "visiting_hhmm": format_hhmm(visiting_minutes), "home_meets_50": home_meets_50,
+                    "home_buffer_hhmm": format_hhmm(home_buffer), "home_need_hhmm": format_hhmm(home_need),
+                    "has_data": total_all_minutes > 0, "is_manual": home_is_manual}
     goal_calc = None
     if total_all_minutes > 0 and home_name:
         MIN_MIN = 3 * 60
@@ -268,7 +283,11 @@ def home():
         if ld:
             lc = max(ld); da = (datetime.utcnow() - lc).days; lct = f"{da}d ago"
         else: da = 999999; lct = "Never"
-        results.append({"name": name, "flags": info["flags"], "minutes": mins,"hours": round(hours,2), "hours_hhmm": format_hhmm(mins),"minimum": info["min_hours"], "minimum_hhmm": format_hhmm(info["min_hours"]*60),"percent": round(pct,1), "status": st, "expiry": exp,"last_controlled": lct, "last_controlled_days": da})
+        results.append({"name": name, "flags": info["flags"], "minutes": mins,
+                        "hours": round(hours,2), "hours_hhmm": format_hhmm(mins),
+                        "minimum": info["min_hours"], "minimum_hhmm": format_hhmm(info["min_hours"]*60),
+                        "percent": round(pct,1), "status": st, "expiry": exp,
+                        "last_controlled": lct, "last_controlled_days": da})
     def esk(x):
         e = x["expiry"]
         if e == "Will not expire": return datetime.max
