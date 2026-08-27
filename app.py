@@ -146,7 +146,7 @@ GROUPS = {
     "vACC Ukraine": {"prefixes": ("UK",), "min_hours": 3, "flags": ["ua"]},
 }
 EDYY_DUTCH = {"EDYY_D_CTR"}
-EDYY_BELUX = {"EDYY_N_CTR","EDYY_K_CTR","EDYY_L_CTR","EDYY_O_CTR","EDYY_BRU_CTR"}
+EDYY_BELUX = {"EDYY_N_CTR","EDYY_K_CTR","EDYY_L_CTR","EDYY_O_CTR","EDYY_BRU_CTR","EDYY_BR_CTR"}
 
 def classify(cs):
     if cs in EDYY_DUTCH: return "Dutch vACC"
