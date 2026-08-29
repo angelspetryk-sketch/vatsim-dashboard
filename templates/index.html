@@ -30,6 +30,10 @@ body.light .btn-outline-light:hover,body.light .btn-outline-info:hover{backgroun
 .last-controlled{font-size:13px;margin-top:4px}
 .theme-toggle{position:fixed;top:16px;right:16px;z-index:1000;border-radius:50%;width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .export-btn{position:fixed;top:16px;right:70px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.share-btn{position:fixed;top:16px;right:150px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.discord-btn{position:fixed;top:16px;right:248px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3);background:#5865F2!important;border-color:#5865F2!important;color:#fff!important;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.discord-btn:hover{background:#4752c4!important;border-color:#4752c4!important;color:#fff!important}
+.discord-btn svg{width:16px;height:16px;fill:currentColor}
 .disclaimer{font-size:12px;color:#9ca3af;font-style:italic;max-width:600px;line-height:1.4}
 body.light .disclaimer{color:#666}
 .stats-row{display:flex;flex-wrap:wrap;gap:12px;width:100%}
@@ -65,6 +69,12 @@ body.light .heatmap-cell.l4{background:#216e39;border-color:#216e39}
 body.light .heatmap-cell.empty{background:transparent;border-color:transparent}
 .heatmap-legend{display:flex;align-items:center;gap:4px;font-size:11px;color:#9ca3af;margin-top:6px;justify-content:flex-end}
 body.light .heatmap-legend{color:#666}
+.heatmap-hl-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;cursor:pointer;user-select:none;margin:0;white-space:nowrap}
+.heatmap-hl-toggle input{accent-color:#3b82f6;cursor:pointer;transform:scale(1.15)}
+body.light .heatmap-hl-toggle{color:#555}
+body.period-hl .heatmap-cell.in-period{box-shadow:0 0 0 2px #3b82f6,0 0 7px rgba(59,130,246,.55);border-color:#3b82f6;position:relative;z-index:1}
+body.period-hl .heatmap-cell.in-range:not(.in-period){opacity:.22}
+body.light.period-hl .heatmap-cell.in-period{box-shadow:0 0 0 2px #2563eb,0 0 7px rgba(37,99,235,.45);border-color:#2563eb}
 .streaks-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13px}
 .streak-item{display:flex;align-items:center;gap:6px}
 .streak-item .icon{font-size:16px}
@@ -74,7 +84,18 @@ body.light .heatmap-legend{color:#666}
 @keyframes pg{0%,100%{box-shadow:0 4px 16px rgba(34,197,94,.4);transform:scale(1)}50%{box-shadow:0 6px 24px rgba(34,197,94,.7);transform:scale(1.02)}}
 .div-toggle{margin-right:8px;cursor:pointer;accent-color:#22c55e;transform:scale(1.15)}
 .div-card-header{display:flex;align-items:center;gap:6px}
-.pdf-export .theme-toggle,.pdf-export .export-btn,.pdf-export #loading-overlay,.pdf-export .div-toggle,.pdf-export .home-change-btn,.pdf-export .share-btn{display:none!important}
+.div-cs{margin-top:10px;border-top:1px solid #30363d;padding-top:8px}
+body.light .div-cs{border-top-color:#ddd}
+.div-cs summary{cursor:pointer;font-size:13px;color:#9ca3af;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.div-cs summary::-webkit-details-marker{display:none}
+.div-cs summary::before{content:"▸";color:#3b82f6;font-size:14px}
+.div-cs[open] summary::before{content:"▾"}
+body.light .div-cs summary{color:#555}
+.div-cs-list{max-height:240px;overflow-y:auto;margin-top:8px}
+.div-cs-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #30363d;font-size:13px}
+.div-cs-row:last-child{border-bottom:none}
+body.light .div-cs-row{border-bottom-color:#eee}
+.pdf-export .theme-toggle,.pdf-export .export-btn,.pdf-export #loading-overlay,.pdf-export .div-toggle,.pdf-export .home-change-btn,.pdf-export .share-btn,.pdf-export .discord-btn{display:none!important}
 .pdf-export .progress-bar{transition:none!important}
 .goal-note{margin-top:8px;padding:8px 10px;background:rgba(59,130,246,.12);border-left:3px solid #3b82f6;border-radius:4px;font-size:12px;color:#9ca3af;line-height:1.5}
 body.light .goal-note{color:#555;background:rgba(59,130,246,.08)}
@@ -106,15 +127,23 @@ body.light .home-change-btn{color:#1d4ed8}
 body.light .home-option{border-color:#ddd}
 body.light .home-option:hover{background:#e0e7ff;border-color:#1f6feb;color:#111}
 body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#111}
-.share-btn{position:fixed;top:16px;right:150px;z-index:1000;border-radius:20px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .live-badge{font-size:13px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+@media (max-width:700px){
+  .discord-btn,.share-btn,.export-btn{position:static;margin:4px}
+  .theme-toggle{position:static}
+  .header-box .top-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+}
 </style></head><body>
 <div class="card-dark" style="text-align:center;font-size:13px;max-width:900px;margin:20px auto;">
     💛 Support the development of this dashboard — donations welcome<br>
     <b>IBAN:</b> <code>CZ69 0800 0000 0053 9882 2073</code>
 </div>
 <div id="loading-overlay"><div class="spinner-ring"></div><div>Loading VATSIM data…</div></div>
+<a class="btn discord-btn" href="https://discord.gg/2nQhrE7g3" target="_blank" rel="noopener noreferrer" title="Join Discord">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+    Discord
+</a>
 <button class="btn btn-primary export-btn" onclick="exportPDF()">📄 PDF</button>
 <button class="btn btn-warning theme-toggle" onclick="toggleTheme()">🌙</button>
 <button class="btn btn-info share-btn" onclick="shareURL(this)">🔗 Share</button>
@@ -149,6 +178,7 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
         <a class="btn btn-sm {% if request.args.get('sort','hours')=='hours' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=hours&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Hours</a>
         <a class="btn btn-sm {% if request.args.get('sort')=='expiry' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=expiry&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Expiry</a>
         <a class="btn btn-sm {% if request.args.get('sort')=='last' %}btn-primary{% else %}btn-outline-light{% endif %}" href="/?sort=last&mode={{ mode }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Last Controlled</a>
+        <a class="btn btn-sm {% if mode=='rolling2' %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode=rolling2&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Rolling 2M</a>
         <a class="btn btn-sm {% if mode=='rolling' %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode=rolling&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">Rolling 3M</a>
         {% for h in ['h1','h2'] %}{% if h in available_periods %}<a class="btn btn-sm {% if mode==h %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ h }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ h|upper }}</a>{% endif %}{% endfor %}
         {% for q in ['q1','q2','q3','q4'] %}{% if q in available_quarters %}<a class="btn btn-sm {% if mode==q %}btn-primary{% else %}btn-outline-info{% endif %}" href="/?mode={{ q }}&sort={{ request.args.get('sort','hours') }}&cid={{ request.args.get('cid','') }}{% if exc %}&exclude={{ exc }}{% endif %}{% if ho %}&home={{ ho }}{% endif %}">{{ q|upper }}</a>{% endif %}{% endfor %}
@@ -176,13 +206,19 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div class="card-dark heatmap-wrap">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="m-0">Activity (last 12 months)</h5>
-        <small>{{ heatmap.total_hhmm }} total • {{ heatmap.active_days }} active days</small>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <label class="heatmap-hl-toggle" title="Highlight days that fall in the currently selected period">
+                <input type="checkbox" id="period-hl-cb" onchange="setPeriodHighlight(this.checked)">
+                <span>Highlight {{ mode_label }}</span>
+            </label>
+            <small>{{ heatmap.total_hhmm }} total • {{ heatmap.active_days }} active days</small>
+        </div>
     </div>
     <div class="heatmap-inner">
         <div class="heatmap-months">{% for ml in heatmap.month_labels %}<span class="heatmap-month-label" style="left:{{ ml.col * 15 }}px;">{{ ml.label }}</span>{% endfor %}</div>
         <div class="heatmap-body">
             <div class="heatmap-days-col"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-            <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
+            <div class="heatmap">{% for week in heatmap.weeks %}{% for day in week %}{% if day.in_range %}<div class="heatmap-cell l{{ day.level }}{% if day.in_period %} in-period{% endif %}" style="cursor:pointer;" onclick='showDay({{ day.sessions|tojson }},"{{ day.date_pretty }}","{{ day.hhmm }}")' title="{{ day.date_pretty }} — {{ day.hhmm }}{% if day.in_period %} ({{ mode_label }}){% endif %}"></div>{% else %}<div class="heatmap-cell empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
         </div>
         <div class="heatmap-legend"><span>Less</span><div class="heatmap-cell l0" style="display:inline-block;"></div><div class="heatmap-cell l1" style="display:inline-block;"></div><div class="heatmap-cell l2" style="display:inline-block;"></div><div class="heatmap-cell l3" style="display:inline-block;"></div><div class="heatmap-cell l4" style="display:inline-block;"></div><span>More</span></div>
     </div>
@@ -279,6 +315,19 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
     <small>{{ i.hours_hhmm }} | {{ i.percent }}% | Min: {{ i.minimum_hhmm }} | Exp: {{ i.expiry }}</small>
     <div class="last-controlled">Last controlled: {{ i.last_controlled }}</div>
     <div class="progress mt-1"><div class="progress-bar" data-percent="{{ i.percent }}">{{ i.percent }}%</div></div>
+    {% if i.callsigns %}
+    <details class="div-cs">
+        <summary>Show callsigns ({{ i.callsigns|length }})</summary>
+        <div class="div-cs-list">
+            {% for c in i.callsigns %}
+            <div class="div-cs-row">
+                <div><b>{{ c.callsign }}</b></div>
+                <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
 </div>
 {% endfor %}
 
@@ -359,6 +408,8 @@ function toggleDivisionByName(n,inc){var s=getCurrentExcluded();if(inc)s.delete(
 function setHome(name){var url=new URL(window.location.href);if(name)url.searchParams.set("home",name);else url.searchParams.delete("home");showLoading();window.location.href=url.toString()}
 function shareURL(btn){navigator.clipboard.writeText(window.location.href).then(function(){var o=btn.textContent;btn.textContent="✅ Copied!";setTimeout(function(){btn.textContent=o},1500)})}
 function showDay(sess,date,total){var b=document.getElementById("day-modal-body");document.getElementById("day-modal-title").textContent=date+" — "+total;if(!sess||!sess.length){b.innerHTML='<div style="padding:20px;text-align:center;color:#9ca3af;">No activity</div>'}else{b.innerHTML=sess.map(function(s){return '<div class="cs-modal-row"><div><b>'+s.callsign+'</b></div><div>'+s.hhmm+'</div></div>'}).join('')}document.getElementById("day-modal").classList.add("show")}
+function setPeriodHighlight(on){document.body.classList.toggle("period-hl",!!on);localStorage.setItem("periodHighlight",on?"1":"0")}
+(function(){var on=localStorage.getItem("periodHighlight")==="1";document.body.classList.toggle("period-hl",on);var cb=document.getElementById("period-hl-cb");if(cb)cb.checked=on})();
 
 {% if all_fulfilled %}
 window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
@@ -387,5 +438,3 @@ function exportPDF(){
     © Trojanek 2026
 </footer>
 </body></html>
-
-
