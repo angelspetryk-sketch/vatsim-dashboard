@@ -383,6 +383,9 @@ function exportPDF(){
     html2pdf().set(opt).from(el).save().then(function(){document.body.classList.remove("pdf-export");hideLoading()}).catch(function(){document.body.classList.remove("pdf-export");hideLoading()});
 }
 </script>
+<footer style="text-align:center; margin:30px 0 15px; color:#888; font-size:12px;">
+    © Trojanek 2026
+</footer>
 </body></html>
 
 
