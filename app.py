@@ -7,6 +7,12 @@ app = Flask(__name__)
 CACHE = {}
 CACHE_TTL = 300
 LIVE_TTL = 60
+MODE_LABELS = {
+    "rolling": "Rolling 3M",
+    "rolling2": "Rolling 2M",
+    "h1": "H1", "h2": "H2",
+    "q1": "Q1", "q2": "Q2", "q3": "Q3", "q4": "Q4",
+}
 
 def cache_get(k):
     e = CACHE.get(k)
@@ -72,7 +78,7 @@ def calc_streaks(daily, today):
         if g > lb: lb = g
     return {"current": current, "best": best, "longest_break": lb}
 
-def build_heatmap(all_sessions):
+def build_heatmap(all_sessions, period_start=None, period_end=None):
     today = datetime.utcnow().date(); start = today - timedelta(days=364)
     daily = defaultdict(float)
     daily_sessions = defaultdict(list)
@@ -94,6 +100,7 @@ def build_heatmap(all_sessions):
                 else:
                     r = m / max_min if max_min else 0
                     lvl = 4 if r >= 0.75 else 3 if r >= 0.5 else 2 if r >= 0.25 else 1
+                in_period = bool(period_start and period_end and period_start <= current <= period_end)
                 week.append({
                     "date": current.strftime("%Y-%m-%d"),
                     "date_pretty": current.strftime("%b %d, %Y"),
@@ -101,11 +108,12 @@ def build_heatmap(all_sessions):
                     "minutes": m,
                     "level": lvl,
                     "in_range": True,
+                    "in_period": in_period,
                     "sessions": daily_sessions.get(current, [])
                 })
                 if wf is None: wf = current
             else:
-                week.append({"in_range": False, "level": -1})
+                week.append({"in_range": False, "level": -1, "in_period": False})
             current += timedelta(days=1)
         if wf:
             mn = wf.strftime("%b")
@@ -183,7 +191,7 @@ def home():
     if cm >= 4: available_quarters.append("q2")
     if cm >= 7: available_quarters.append("q3")
     if cm >= 10: available_quarters.append("q4")
-    available_modes = ["rolling"] + available_periods + available_quarters
+    available_modes = ["rolling", "rolling2"] + available_periods + available_quarters
     if mode not in available_modes: mode = "rolling"
     if mode == "h1": since, until = datetime(cy,1,1), datetime(cy,6,30,23,59,59)
     elif mode == "h2": since, until = datetime(cy,7,1), datetime(cy,12,31,23,59,59)
@@ -191,10 +199,11 @@ def home():
     elif mode == "q2": since, until = datetime(cy,4,1), datetime(cy,6,30,23,59,59)
     elif mode == "q3": since, until = datetime(cy,7,1), datetime(cy,9,30,23,59,59)
     elif mode == "q4": since, until = datetime(cy,10,1), datetime(cy,12,31,23,59,59)
+    elif mode == "rolling2": since, until = datetime.now() - timedelta(days=61), datetime.now()
     else: since, until = datetime.now() - timedelta(weeks=13), datetime.now()
     now_dt = datetime.now()
     period_countdown = None
-    if mode != "rolling":
+    if mode not in ("rolling", "rolling2"):
         total_days = (until.date() - since.date()).days + 1
         days_left = max(0, (until.date() - now_dt.date()).days)
         days_elapsed = max(0, total_days - days_left)
@@ -208,10 +217,16 @@ def home():
         s = dict(s); s["start_dt"] = datetime.fromisoformat(s["start"]); all_sessions.append(s)
     filtered_data = [s for s in all_sessions if since <= s["start_dt"] <= until]
     callsign_stats = defaultdict(lambda: {"minutes": 0, "sessions": 0})
+    group_callsigns = defaultdict(lambda: defaultdict(lambda: {"minutes": 0, "sessions": 0}))
     for s in filtered_data:
         cs = s.get("callsign", "UNKNOWN").upper()
-        callsign_stats[cs]["minutes"] += float(s.get("minutes_on_callsign", 0))
+        mins = float(s.get("minutes_on_callsign", 0))
+        callsign_stats[cs]["minutes"] += mins
         callsign_stats[cs]["sessions"] += 1
+        n = classify(cs)
+        if n:
+            group_callsigns[n][cs]["minutes"] += mins
+            group_callsigns[n][cs]["sessions"] += 1
     all_callsigns = [{"callsign": c, "minutes": st["minutes"], "hours_hhmm": format_hhmm(st["minutes"]), "sessions": st["sessions"]} for c, st in callsign_stats.items()]
     all_callsigns.sort(key=lambda x: x["minutes"], reverse=True)
     top_callsigns = all_callsigns[:5]
@@ -257,19 +272,28 @@ def home():
         final_needed = home_add_total + visiting_need
         goal_calc = {"needed_min": final_needed,"needed_hhmm": format_hhmm(final_needed),"home_50_now_hhmm": format_hhmm(home_50_now),"home_min_need_hhmm": format_hhmm(home_min_need),"visiting_need_hhmm": format_hhmm(visiting_need),"home_for_50_total_hhmm": format_hhmm(home_for_50_total),"home_add_total_hhmm": format_hhmm(home_add_total),"visiting_afford_hhmm": format_hhmm(visiting_afford),"visiting_afford_min": visiting_afford}
     def future_expiry(sessions, name, min_hours):
-        if mode != "rolling": return "Half/Quarter mode"
+        if mode == "rolling":
+            window = timedelta(weeks=13)
+        elif mode == "rolling2":
+            window = timedelta(days=61)
+        else:
+            return "Half/Quarter mode"
         rel = [s for s in sessions if classify(s["callsign"].upper()) == name]
         times = [(s["start_dt"].date(), float(s["minutes_on_callsign"])) for s in rel]
         td = datetime.utcnow().date(); ed = td + timedelta(weeks=52)
-        ct = sum(m for d, m in times if td - timedelta(weeks=13) <= d <= td)
+        ct = sum(m for d, m in times if td - window <= d <= td)
         if ct / 60 < min_hours: return "Not fulfilled"
         cd = td
         while cd <= ed:
-            ws = cd - timedelta(weeks=13)
+            ws = cd - window
             tm = sum(m for d, m in times if ws <= d <= cd)
             if tm / 60 < min_hours: return cd.strftime("%Y-%m-%d")
             cd += timedelta(days=1)
         return "Will not expire"
+    def callsigns_for(name):
+        items = [{"callsign": c, "minutes": st["minutes"], "hours_hhmm": format_hhmm(st["minutes"]), "sessions": st["sessions"]} for c, st in group_callsigns[name].items()]
+        items.sort(key=lambda x: x["minutes"], reverse=True)
+        return items
     results = []; fulfilled_count = 0; not_fulfilled_count = 0
     for name, info in GROUPS.items():
         if name not in active_groups or name in excluded: continue
@@ -287,7 +311,8 @@ def home():
                         "hours": round(hours,2), "hours_hhmm": format_hhmm(mins),
                         "minimum": info["min_hours"], "minimum_hhmm": format_hhmm(info["min_hours"]*60),
                         "percent": round(pct,1), "status": st, "expiry": exp,
-                        "last_controlled": lct, "last_controlled_days": da})
+                        "last_controlled": lct, "last_controlled_days": da,
+                        "callsigns": callsigns_for(name)})
     def esk(x):
         e = x["expiry"]
         if e == "Will not expire": return datetime.max
@@ -297,9 +322,10 @@ def home():
     if sort_by == "expiry": results.sort(key=esk)
     elif sort_by == "last": results.sort(key=lambda x: x["last_controlled_days"])
     else: results.sort(key=lambda x: x["hours"], reverse=True)
-    heatmap = build_heatmap(all_sessions)
+    heatmap = build_heatmap(all_sessions, since.date(), until.date())
     all_fulfilled = fulfilled_count > 0 and not_fulfilled_count == 0
-    return render_template("index.html",results=results,request=request,mode=mode,available_quarters=available_quarters,available_periods=available_periods,pilot_name=pilot_name,live_status=live_status,fulfilled_count=fulfilled_count,not_fulfilled_count=not_fulfilled_count,top_callsigns=top_callsigns,all_callsigns=all_callsigns,period_stats=period_stats,goal_calc=goal_calc,heatmap=heatmap,all_fulfilled=all_fulfilled,excluded=excluded,period_countdown=period_countdown,selectable_homes=selectable_homes,home_override=home_override)
+    mode_label = MODE_LABELS.get(mode, mode.upper())
+    return render_template("index.html",results=results,request=request,mode=mode,mode_label=mode_label,available_quarters=available_quarters,available_periods=available_periods,pilot_name=pilot_name,live_status=live_status,fulfilled_count=fulfilled_count,not_fulfilled_count=not_fulfilled_count,top_callsigns=top_callsigns,all_callsigns=all_callsigns,period_stats=period_stats,goal_calc=goal_calc,heatmap=heatmap,all_fulfilled=all_fulfilled,excluded=excluded,period_countdown=period_countdown,selectable_homes=selectable_homes,home_override=home_override)
 
 if __name__ == "__main__":
     import os
