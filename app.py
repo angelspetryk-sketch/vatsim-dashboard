@@ -23,6 +23,62 @@ def cache_get(k):
     return e["data"]
 def cache_set(k, d): CACHE[k] = {"t": time.time(), "data": d}
 
+RATING_MAP = {
+    -1: "INA", 0: "SUS", 1: "OBS", 2: "S1", 3: "S2", 4: "S3",
+    5: "C1", 6: "C2", 7: "C3", 8: "I1", 9: "I2", 10: "I3", 11: "SUP", 12: "ADM"
+}
+
+POSITION_CONFIG = {
+    "CTR": {"name": "Center / Radar", "icon": "📡", "color": "#3b82f6", "order": 1},
+    "APP": {"name": "Approach / Departure", "icon": "🛬", "color": "#06b6d4", "order": 2},
+    "TWR": {"name": "Tower", "icon": "🗼", "color": "#22c55e", "order": 3},
+    "GND": {"name": "Ground", "icon": "🚜", "color": "#f59e0b", "order": 4},
+    "DEL": {"name": "Delivery", "icon": "📋", "color": "#a855f7", "order": 5},
+    "FSS": {"name": "Flight Service", "icon": "📻", "color": "#ec4899", "order": 6},
+}
+
+def classify_position(callsign):
+    cs = callsign.upper().strip()
+    parts = cs.split("_")
+    for part in reversed(parts):
+        if part in ("DEL", "CD", "CLEARANCE"): return "DEL"
+        if part in ("GND", "GROUND", "RAMP", "APRON", "TAX", "TAXI"): return "GND"
+        if part in ("TWR", "TOWER", "AIR"): return "TWR"
+        if part in ("APP", "DEP", "APPROACH", "DEPARTURE", "DIR", "DIRECTOR", "RAD", "FIN", "FINAL", "ARR", "ARRIVAL", "TMA"): return "APP"
+        if part in ("CTR", "CENTER", "CENTRE", "ACC", "RADAR", "ENR", "CONTROL", "AREA"): return "CTR"
+        if part in ("FSS", "RDO", "RADIO", "INFO", "INFORMATION", "OCN", "OCEANIC"): return "FSS"
+    if "_DEL" in cs or "_CD" in cs: return "DEL"
+    if "_GND" in cs or "_RAMP" in cs: return "GND"
+    if "_TWR" in cs: return "TWR"
+    if "_APP" in cs or "_DEP" in cs or "_DIR" in cs or "_FIN" in cs: return "APP"
+    if "_CTR" in cs or "_ACC" in cs or "EDYY" in cs or "LON_" in cs: return "CTR"
+    if "_FSS" in cs or "_RDO" in cs: return "FSS"
+    return "CTR" if ("CTR" in cs or "ACC" in cs) else "APP" if ("APP" in cs or "DEP" in cs) else "TWR" if "TWR" in cs else "GND" if "GND" in cs else "OTHER"
+
+def fetch_member_info(cid):
+    k = f"member:{cid}"
+    c = cache_get(k)
+    if c is not None: return c
+    info = {"name": None, "rating": None, "rating_code": "", "division": None, "subdivision": None}
+    try:
+        r = requests.get(f"https://api.vatsim.net/v2/members/{cid}", headers={'Accept':'application/json'}, timeout=10)
+        if r.status_code == 200:
+            j = r.json()
+            rtg = j.get("rating", 0)
+            info["rating"] = rtg
+            info["rating_code"] = RATING_MAP.get(rtg, "")
+            info["division"] = j.get("division_id")
+            info["subdivision"] = j.get("subdivision_id")
+            raw_name = j.get("name") or j.get("full_name") or j.get("name_first")
+            if raw_name:
+                ns = str(raw_name).strip()
+                if not ns.isdigit() and ns.lower() not in ("none", "null", "unknown", str(cid)):
+                    info["name"] = ns
+    except Exception:
+        pass
+    cache_set(k, info)
+    return info
+
 def fetch_pilot_name(cid):
     k = f"pilot:{cid}"
     c = cache_get(k)
@@ -30,9 +86,14 @@ def fetch_pilot_name(cid):
     try:
         pr = requests.get(f"https://api.vatsim.net/api/ratings/{cid}/", headers={'Accept':'application/json'}, timeout=10)
         if pr.status_code == 200:
-            j = pr.json(); name = j.get("name") or j.get("full_name")
-            cache_set(k, name); return name
-    except: pass
+            j = pr.json()
+            raw_name = j.get("name") or j.get("full_name")
+            if raw_name:
+                ns = str(raw_name).strip()
+                if not ns.isdigit() and ns.lower() not in ("none", "null", "unknown", str(cid)):
+                    cache_set(k, ns); return ns
+    except Exception:
+        pass
     cache_set(k, None); return None
 
 def fetch_live_status(cid):
@@ -44,20 +105,30 @@ def fetch_live_status(cid):
         if r.status_code == 200:
             for c_ in r.json().get("controllers", []):
                 if str(c_.get("cid")) == str(cid):
-                    res = {"online": True, "callsign": c_.get("callsign"), "frequency": c_.get("frequency")}
+                    raw_name = c_.get("name")
+                    clean_name = None
+                    if raw_name:
+                        ns = str(raw_name).strip()
+                        if not ns.isdigit() and ns.lower() not in ("none", "null", "unknown", str(cid)):
+                            clean_name = ns
+                    res = {"online": True, "callsign": c_.get("callsign"), "frequency": c_.get("frequency"), "name": clean_name}
                     cache_set(k, res); return res
-    except: pass
-    res = {"online": False}
+    except Exception:
+        pass
+    res = {"online": False, "name": None}
     cache_set(k, res); return res
 
 def fetch_sessions(cid, start_date):
     k = f"sessions:{cid}:{start_date}"
     c = cache_get(k)
     if c is not None: return c
-    r = requests.get(f"https://api.vatsim.net/api/ratings/{cid}/atcsessions/?start={start_date}", headers={'Accept':'application/json'}, timeout=15)
-    if r.status_code != 200: return {"error": r.status_code, "results": []}
-    d = {"error": None, "results": r.json().get("results", [])}
-    cache_set(k, d); return d
+    try:
+        r = requests.get(f"https://api.vatsim.net/api/ratings/{cid}/atcsessions/?start={start_date}", headers={'Accept':'application/json'}, timeout=15)
+        if r.status_code != 200: return {"error": r.status_code, "results": []}
+        d = {"error": None, "results": r.json().get("results", [])}
+        cache_set(k, d); return d
+    except Exception:
+        return {"error": 500, "results": []}
 
 def format_hhmm(m):
     t = int(round(m)); return f"{t//60:02d}:{t%60:02d}"
@@ -126,6 +197,106 @@ def build_heatmap(all_sessions, period_start=None, period_end=None):
             "active_days": ad, "current_streak": st["current"], "best_streak": st["best"],
             "longest_break": st["longest_break"], "has_data": tm > 0}
 
+def calc_streak_level(streak_days):
+    if streak_days >= 30:
+        return {
+            "level": 5,
+            "name": "VATSIM Legend",
+            "icon": "👑",
+            "title": "VATSIM Legend",
+            "color": "#eab308",
+            "glow_class": "streak-lvl-5",
+            "badge_class": "streak-badge-5",
+            "next_threshold": None,
+            "next_name": "Max Rank Reached",
+            "days_to_next": 0,
+            "pct_to_next": 100,
+            "msg": f"👑 {streak_days} days streak! You are an absolute legend on the VATSIM network!"
+        }
+    elif streak_days >= 14:
+        prev_t = 14; next_t = 30
+        pct = min(100, max(0, round((streak_days - prev_t) / (next_t - prev_t) * 100)))
+        return {
+            "level": 4,
+            "name": "Unstoppable",
+            "icon": "💎",
+            "title": "Radar Veteran",
+            "color": "#8b5cf6",
+            "glow_class": "streak-lvl-4",
+            "badge_class": "streak-badge-4",
+            "next_threshold": 30,
+            "next_name": "VATSIM Legend (30d)",
+            "days_to_next": 30 - streak_days,
+            "pct_to_next": pct,
+            "msg": f"💎 {streak_days} days streak! Unstoppable radar presence."
+        }
+    elif streak_days >= 7:
+        prev_t = 7; next_t = 14
+        pct = min(100, max(0, round((streak_days - prev_t) / (next_t - prev_t) * 100)))
+        return {
+            "level": 3,
+            "name": "On Fire",
+            "icon": "🔥",
+            "title": "Streak Master",
+            "color": "#ef4444",
+            "glow_class": "streak-lvl-3",
+            "badge_class": "streak-badge-3",
+            "next_threshold": 14,
+            "next_name": "Radar Veteran (14d)",
+            "days_to_next": 14 - streak_days,
+            "pct_to_next": pct,
+            "msg": f"🔥 {streak_days} days streak! The frequencies are blazing hot."
+        }
+    elif streak_days >= 3:
+        prev_t = 3; next_t = 7
+        pct = min(100, max(0, round((streak_days - prev_t) / (next_t - prev_t) * 100)))
+        return {
+            "level": 2,
+            "name": "Heating Up",
+            "icon": "⚡",
+            "title": "Dedicated Controller",
+            "color": "#f59e0b",
+            "glow_class": "streak-lvl-2",
+            "badge_class": "streak-badge-2",
+            "next_threshold": 7,
+            "next_name": "Streak Master (7d)",
+            "days_to_next": 7 - streak_days,
+            "pct_to_next": pct,
+            "msg": f"⚡ {streak_days} days in a row! Solid momentum building up."
+        }
+    elif streak_days >= 1:
+        prev_t = 1; next_t = 3
+        pct = min(100, max(0, round((streak_days - prev_t) / (next_t - prev_t) * 100)))
+        return {
+            "level": 1,
+            "name": "Warming Up",
+            "icon": "🌱",
+            "title": "Active Controller",
+            "color": "#10b981",
+            "glow_class": "streak-lvl-1",
+            "badge_class": "streak-badge-1",
+            "next_threshold": 3,
+            "next_name": "Heating Up (3d)",
+            "days_to_next": 3 - streak_days,
+            "pct_to_next": pct,
+            "msg": f"🌱 {streak_days} day streak started! Keep it going tomorrow."
+        }
+    else:
+        return {
+            "level": 0,
+            "name": "Cold Start",
+            "icon": "💤",
+            "title": "Inactive",
+            "color": "#64748b",
+            "glow_class": "streak-lvl-0",
+            "badge_class": "streak-badge-0",
+            "next_threshold": 1,
+            "next_name": "Warming Up (1d)",
+            "days_to_next": 1,
+            "pct_to_next": 0,
+            "msg": "No active streak. Open a station today to ignite your streak!"
+        }
+
 GROUPS = {
     "VATSIM Germany": {"prefixes": ("ED",), "min_hours": 3, "flags": ["de"]},
     "TRvACC": {"prefixes": ("ANK","IST","LT"), "min_hours": 3, "flags": ["tr"]},
@@ -177,13 +348,12 @@ def classify(cs):
 
 @app.route("/", methods=["GET"])
 def home():
-    cid = request.args.get("cid", "1626475")
+    cid = request.args.get("cid", "1626475").strip()
     sort_by = request.args.get("sort", "hours")
     mode = request.args.get("mode", "rolling")
     excluded = set(filter(None, request.args.get("exclude", "").split("|")))
     home_override = request.args.get("home", "").strip()
-    pilot_name = fetch_pilot_name(cid)
-    live_status = fetch_live_status(cid)
+
     cy = datetime.now().year; cm = datetime.now().month
     available_periods = ["h1"]
     if cm >= 7: available_periods.append("h2")
@@ -193,6 +363,8 @@ def home():
     if cm >= 10: available_quarters.append("q4")
     available_modes = ["rolling", "rolling2"] + available_periods + available_quarters
     if mode not in available_modes: mode = "rolling"
+    mode_label = MODE_LABELS.get(mode, mode.upper())
+
     if mode == "h1": since, until = datetime(cy,1,1), datetime(cy,6,30,23,59,59)
     elif mode == "h2": since, until = datetime(cy,7,1), datetime(cy,12,31,23,59,59)
     elif mode == "q1": since, until = datetime(cy,1,1), datetime(cy,3,31,23,59,59)
@@ -209,27 +381,109 @@ def home():
         days_elapsed = max(0, total_days - days_left)
         pct_elapsed = round(days_elapsed / total_days * 100, 1) if total_days else 0
         period_countdown = {"label": mode.upper(),"end_date": until.strftime("%b %d, %Y"),"days_left": days_left,"total_days": total_days,"days_elapsed": days_elapsed,"pct_elapsed": pct_elapsed,"is_over": now_dt > until}
+
+    def render_error(err_text):
+        empty_heatmap = {"weeks": [], "month_labels": [], "total_hhmm": "00:00", "active_days": 0, "current_streak": 0, "best_streak": 0, "longest_break": 0, "has_data": False}
+        empty_period = {"has_data": False, "total_hhmm": "00:00", "home_name": None, "home_flags": [], "home_hhmm": "00:00", "visiting_hhmm": "00:00", "home_meets_50": False, "home_buffer_hhmm": "00:00", "home_need_hhmm": "00:00", "is_manual": False}
+        return render_template(
+            "index.html",
+            results=[],
+            request=request,
+            mode=mode,
+            mode_label=mode_label,
+            available_quarters=available_quarters,
+            available_periods=available_periods,
+            pilot_name=None,
+            member_info={"rating_code": "", "division": None, "subdivision": None},
+            live_status={"online": False, "name": None},
+            fulfilled_count=0,
+            not_fulfilled_count=0,
+            top_callsigns=[],
+            all_callsigns=[],
+            position_breakdown=[],
+            period_stats=empty_period,
+            goal_calc=None,
+            heatmap=empty_heatmap,
+            streak_info=calc_streak_level(0),
+            all_fulfilled=False,
+            excluded=excluded,
+            period_countdown=period_countdown,
+            selectable_homes=[],
+            home_override=home_override,
+            error_message=err_text
+        )
+
+    if not cid or not cid.isdigit():
+        return render_error("Invalid CID")
+
+    member_info = fetch_member_info(cid)
+    live_status = fetch_live_status(cid)
+    raw_pilot_name = member_info.get("name") or live_status.get("name") or fetch_pilot_name(cid)
+    pilot_name = None
+    if raw_pilot_name:
+        ns = str(raw_pilot_name).strip()
+        if not ns.isdigit() and ns.lower() not in ("none", "null", "unknown", str(cid)):
+            pilot_name = ns
+
     start_date = (datetime.now() - timedelta(days=548)).strftime("%Y-%m-%d")
     sr = fetch_sessions(cid, start_date)
-    if sr["error"]: return f"API Error: {sr['error']}"
+    if sr.get("error"):
+        if sr["error"] in (404, 400, 422):
+            return render_error("Invalid CID")
+        return render_error("VATSIM API Error")
     all_sessions = []
     for s in sr["results"]:
         s = dict(s); s["start_dt"] = datetime.fromisoformat(s["start"]); all_sessions.append(s)
     filtered_data = [s for s in all_sessions if since <= s["start_dt"] <= until]
     callsign_stats = defaultdict(lambda: {"minutes": 0, "sessions": 0})
     group_callsigns = defaultdict(lambda: defaultdict(lambda: {"minutes": 0, "sessions": 0}))
+    pos_minutes = defaultdict(float)
+    pos_sessions = defaultdict(int)
+
     for s in filtered_data:
         cs = s.get("callsign", "UNKNOWN").upper()
         mins = float(s.get("minutes_on_callsign", 0))
         callsign_stats[cs]["minutes"] += mins
         callsign_stats[cs]["sessions"] += 1
+        pos = classify_position(cs)
+        pos_minutes[pos] += mins
+        pos_sessions[pos] += 1
         n = classify(cs)
         if n:
             group_callsigns[n][cs]["minutes"] += mins
             group_callsigns[n][cs]["sessions"] += 1
-    all_callsigns = [{"callsign": c, "minutes": st["minutes"], "hours_hhmm": format_hhmm(st["minutes"]), "sessions": st["sessions"]} for c, st in callsign_stats.items()]
+
+    total_pos_minutes = sum(pos_minutes.values())
+    position_breakdown = []
+    for code, cfg in sorted(POSITION_CONFIG.items(), key=lambda x: x[1]["order"]):
+        mins = pos_minutes.get(code, 0)
+        if mins > 0:
+            pct = round(mins / total_pos_minutes * 100, 1) if total_pos_minutes else 0
+            position_breakdown.append({
+                "code": code,
+                "name": cfg["name"],
+                "icon": cfg["icon"],
+                "color": cfg["color"],
+                "minutes": mins,
+                "hours_hhmm": format_hhmm(mins),
+                "percent": pct,
+                "sessions": pos_sessions.get(code, 0)
+            })
+
+    all_callsigns = []
+    for c, st in callsign_stats.items():
+        pos = classify_position(c)
+        all_callsigns.append({
+            "callsign": c,
+            "position": pos,
+            "pos_color": POSITION_CONFIG.get(pos, {}).get("color", "#64748b"),
+            "minutes": st["minutes"],
+            "hours_hhmm": format_hhmm(st["minutes"]),
+            "sessions": st["sessions"]
+        })
     all_callsigns.sort(key=lambda x: x["minutes"], reverse=True)
     top_callsigns = all_callsigns[:5]
+
     totals = {k: 0 for k in GROUPS}; active_groups = set()
     for s in all_sessions:
         n = classify(s.get("callsign","").upper())
@@ -291,7 +545,17 @@ def home():
             cd += timedelta(days=1)
         return "Will not expire"
     def callsigns_for(name):
-        items = [{"callsign": c, "minutes": st["minutes"], "hours_hhmm": format_hhmm(st["minutes"]), "sessions": st["sessions"]} for c, st in group_callsigns[name].items()]
+        items = []
+        for c, st in group_callsigns[name].items():
+            pos = classify_position(c)
+            items.append({
+                "callsign": c,
+                "position": pos,
+                "pos_color": POSITION_CONFIG.get(pos, {}).get("color", "#64748b"),
+                "minutes": st["minutes"],
+                "hours_hhmm": format_hhmm(st["minutes"]),
+                "sessions": st["sessions"]
+            })
         items.sort(key=lambda x: x["minutes"], reverse=True)
         return items
     results = []; fulfilled_count = 0; not_fulfilled_count = 0
@@ -323,9 +587,9 @@ def home():
     elif sort_by == "last": results.sort(key=lambda x: x["last_controlled_days"])
     else: results.sort(key=lambda x: x["hours"], reverse=True)
     heatmap = build_heatmap(all_sessions, since.date(), until.date())
+    streak_info = calc_streak_level(heatmap["current_streak"])
     all_fulfilled = fulfilled_count > 0 and not_fulfilled_count == 0
-    mode_label = MODE_LABELS.get(mode, mode.upper())
-    return render_template("index.html",results=results,request=request,mode=mode,mode_label=mode_label,available_quarters=available_quarters,available_periods=available_periods,pilot_name=pilot_name,live_status=live_status,fulfilled_count=fulfilled_count,not_fulfilled_count=not_fulfilled_count,top_callsigns=top_callsigns,all_callsigns=all_callsigns,period_stats=period_stats,goal_calc=goal_calc,heatmap=heatmap,all_fulfilled=all_fulfilled,excluded=excluded,period_countdown=period_countdown,selectable_homes=selectable_homes,home_override=home_override)
+    return render_template("index.html",results=results,request=request,mode=mode,mode_label=mode_label,available_quarters=available_quarters,available_periods=available_periods,pilot_name=pilot_name,member_info=member_info,live_status=live_status,fulfilled_count=fulfilled_count,not_fulfilled_count=not_fulfilled_count,top_callsigns=top_callsigns,all_callsigns=all_callsigns,position_breakdown=position_breakdown,period_stats=period_stats,goal_calc=goal_calc,heatmap=heatmap,streak_info=streak_info,all_fulfilled=all_fulfilled,excluded=excluded,period_countdown=period_countdown,selectable_homes=selectable_homes,home_override=home_override,error_message=None)
 
 if __name__ == "__main__":
     import os
