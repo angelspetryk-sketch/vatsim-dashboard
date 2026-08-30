@@ -129,6 +129,44 @@ body.light .home-option:hover{background:#e0e7ff;border-color:#1f6feb;color:#111
 body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#111}
 .live-badge{font-size:13px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.member-badge{font-size:14px;padding:6px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid #30363d;}
+body.light .member-badge{background:#e5e7eb;border-color:#d1d5db;color:#111;}
+.rating-pill{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:bold;font-size:11px;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;box-shadow:0 2px 4px rgba(245,158,11,.3);}
+.region-pill{background:#30363d;color:#9ca3af;font-size:11px;padding:2px 6px;border-radius:6px;}
+body.light .region-pill{background:#d1d5db;color:#4b5563;}
+.streak-pill{font-size:11px;font-weight:bold;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:4px;color:#fff;}
+.streak-badge-0{background:#475569;}
+.streak-badge-1{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 0 8px rgba(16,185,129,.4);}
+.streak-badge-2{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 0 10px rgba(245,158,11,.5);animation:flamePulse 2s infinite ease-in-out;}
+.streak-badge-3{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 0 12px rgba(239,68,68,.7);animation:flamePulse 1.5s infinite ease-in-out;}
+.streak-badge-4{background:linear-gradient(135deg,#8b5cf6,#6366f1);box-shadow:0 0 14px rgba(139,92,246,.75);animation:flamePulse 1.2s infinite ease-in-out;}
+.streak-badge-5{background:linear-gradient(135deg,#eab308,#f59e0b,#ef4444);box-shadow:0 0 18px rgba(234,179,8,.85);animation:legendShimmer 2.5s infinite linear;}
+@keyframes flamePulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.05);opacity:.9;}}
+@keyframes legendShimmer{0%,100%{box-shadow:0 0 10px rgba(234,179,8,.6);}50%{box-shadow:0 0 22px rgba(239,68,68,.9);}}
+.streak-card-glow{position:relative;transition:border-color .3s,box-shadow .3s;}
+.streak-card-glow.streak-lvl-1{border-color:rgba(16,185,129,.4);box-shadow:0 0 15px rgba(16,185,129,.12);}
+.streak-card-glow.streak-lvl-2{border-color:rgba(245,158,11,.5);box-shadow:0 0 20px rgba(245,158,11,.18);}
+.streak-card-glow.streak-lvl-3{border-color:rgba(239,68,68,.6);box-shadow:0 0 25px rgba(239,68,68,.22);}
+.streak-card-glow.streak-lvl-4{border-color:rgba(139,92,246,.7);box-shadow:0 0 30px rgba(139,92,246,.28);}
+.streak-card-glow.streak-lvl-5{border-color:rgba(234,179,8,.85);box-shadow:0 0 35px rgba(234,179,8,.35);background:linear-gradient(180deg,rgba(234,179,8,.06),transparent 40%),#161b22;}
+body.light .streak-card-glow.streak-lvl-5{background:linear-gradient(180deg,rgba(234,179,8,.1),transparent 40%),#fff;}
+.streak-banner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 14px;border-radius:10px;margin-bottom:12px;background:rgba(255,255,255,.04);border:1px solid #30363d;}
+body.light .streak-banner{background:#f9fafb;border-color:#e5e7eb;}
+.streak-banner-title{display:flex;align-items:center;gap:8px;font-weight:bold;font-size:14px;}
+.streak-prog-wrap{flex:1 1 180px;max-width:260px;}
+.streak-prog-bar{height:6px;background:#21262d;border-radius:4px;overflow:hidden;margin-top:4px;}
+body.light .streak-prog-bar{background:#e5e5e5;}
+.streak-prog-fill{height:100%;transition:width 1s ease-out;}
+.pos-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#21262d;margin:10px 0 12px;}
+body.light .pos-bar{background:#e5e5e5;}
+.pos-segment{height:100%;transition:width 1s cubic-bezier(.16,1,.3,1);}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:6px;}
+.pos-card{background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;}
+body.light .pos-card{background:#f9fafb;border-color:#e5e7eb;}
+.pos-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
+.pos-title{display:flex;align-items:center;gap:4px;font-weight:bold;}
+.pos-val{font-size:13px;font-weight:bold;}
+.pos-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:bold;color:#fff;margin-right:6px;min-width:32px;text-align:center;}
 @media (max-width:700px){
   .discord-btn,.share-btn,.export-btn{position:static;margin:4px}
   .theme-toggle{position:static}
@@ -153,16 +191,43 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 <div class="header-box">
     <h1>VATSIM Dashboard</h1>
     <div class="disclaimer">Limits shown for each division are not officially verified and should be taken as guidance only.</div>
+    {% if error_message %}
+    <div class="alert alert-danger text-center w-100 my-2" role="alert" style="max-width:600px; border-radius:10px; font-weight:bold;">
+        ⚠️ {{ error_message }}{% if request.args.get('cid') and error_message == "Invalid CID" %} ({{ request.args.get('cid') }}){% endif %}
+    </div>
+    {% else %}
     <div class="d-flex gap-2">
         <span class="badge bg-success">Fulfilled: {{ fulfilled_count }}</span>
         <span class="badge bg-danger">Not fulfilled: {{ not_fulfilled_count }}</span>
     </div>
     {% if all_fulfilled %}<div class="celebration-banner show">🎉 All divisions fulfilled — great job! 🎉</div>{% endif %}
-    {% if pilot_name %}<div><span class="badge bg-secondary">{{ pilot_name }} ({{ request.args.get('cid') }})</span></div>{% endif %}
-    {% if live_status.online %}
-        <div><span class="badge bg-success live-badge">🟢 LIVE: <b>{{ live_status.callsign }}</b> · {{ live_status.frequency }}</span></div>
-    {% else %}
-        <div><span class="badge bg-secondary" style="font-size:11px;">⚫ Offline</span></div>
+    <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 my-1">
+        <div class="member-badge">
+            <span>👤</span>
+            {% if pilot_name %}
+                <b>{{ pilot_name }}</b>
+                <small style="opacity:0.8;">({{ request.args.get('cid') }})</small>
+            {% else %}
+                <b>CID {{ request.args.get('cid') }}</b>
+            {% endif %}
+            {% if member_info and member_info.rating_code %}
+                <span class="rating-pill">{{ member_info.rating_code }}</span>
+            {% endif %}
+            {% if member_info and (member_info.subdivision or member_info.division) %}
+                <span class="region-pill">{% if member_info.subdivision %}{{ member_info.subdivision }}{% else %}{{ member_info.division }}{% endif %}</span>
+            {% endif %}
+            {% if streak_info and streak_info.level >= 1 %}
+                <span class="streak-pill {{ streak_info.badge_class }}" title="{{ streak_info.msg }}">
+                    <span>{{ streak_info.icon }}</span> {{ streak_info.title }} ({{ heatmap.current_streak }}d)
+                </span>
+            {% endif %}
+        </div>
+        {% if live_status.online %}
+            <div><span class="badge bg-success live-badge">🟢 LIVE: <b>{{ live_status.callsign }}</b> · {{ live_status.frequency }}</span></div>
+        {% else %}
+            <div><span class="badge bg-secondary" style="font-size:11px;padding:6px 10px;border-radius:12px;">⚫ Offline</span></div>
+        {% endif %}
+    </div>
     {% endif %}
     <form method="GET" class="my-2 d-flex justify-content-center gap-2 w-100" id="cid-form" style="max-width:600px;">
         <input type="hidden" name="mode" value="{{ mode }}">
@@ -203,7 +268,37 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 {% endif %}
 
 {% if heatmap.has_data %}
-<div class="card-dark heatmap-wrap">
+<div class="card-dark heatmap-wrap streak-card-glow {{ streak_info.glow_class }}">
+    {% if streak_info %}
+    <div class="streak-banner">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span style="font-size:24px;line-height:1;">{{ streak_info.icon }}</span>
+            <div>
+                <div class="streak-banner-title">
+                    <span>{{ streak_info.name }}</span>
+                    <span class="streak-pill {{ streak_info.badge_class }}">{{ heatmap.current_streak }}d streak</span>
+                </div>
+                <small style="font-size:11px;color:#9ca3af;">{{ streak_info.msg }}</small>
+            </div>
+        </div>
+        {% if streak_info.next_threshold %}
+        <div class="streak-prog-wrap">
+            <div class="d-flex justify-content-between" style="font-size:10px;color:#9ca3af;margin-bottom:2px;">
+                <span>Next: <b>{{ streak_info.next_name }}</b></span>
+                <span><b>{{ streak_info.days_to_next }}d</b> left</span>
+            </div>
+            <div class="streak-prog-bar">
+                <div class="streak-prog-fill" style="width:{{ streak_info.pct_to_next }}%;background:{{ streak_info.color }};"></div>
+            </div>
+        </div>
+        {% else %}
+        <div>
+            <span class="badge" style="background:linear-gradient(135deg,#eab308,#ef4444);color:#fff;font-size:11px;padding:4px 8px;">👑 MAX RANK</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h5 class="m-0">Activity (last 12 months)</h5>
         <div class="d-flex align-items-center gap-3 flex-wrap">
@@ -231,15 +326,6 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
 {% endif %}
 
 <div class="stats-row">
-    {% if top_callsigns %}
-    <div class="card-dark stats-card">
-        <h5 class="mb-3">Top Callsigns</h5>
-        {% for c in top_callsigns %}<div class="d-flex justify-content-between mb-2"><div><b>{{ c.callsign }}</b></div><div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div></div>{% endfor %}
-        {% if all_callsigns|length > 5 %}
-        <button class="btn btn-sm btn-outline-light mt-2 w-100" type="button" onclick="document.getElementById('callsigns-modal').classList.add('show')">View more ({{ all_callsigns|length }})</button>
-        {% endif %}
-    </div>
-    {% endif %}
     {% if period_stats.has_data %}
     <div class="card-dark stats-card">
         <h5 class="mb-3">Period Stats</h5>
@@ -289,6 +375,53 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
         {% endif %}
     </div>
     {% endif %}
+
+    {% if position_breakdown %}
+    <div class="card-dark stats-card">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h5 class="m-0">Positions Breakdown</h5>
+            <small>{{ mode_label }}</small>
+        </div>
+        <div class="pos-bar" title="Position Distribution">
+            {% for p in position_breakdown %}
+            <div class="pos-segment" style="width:{{ p.percent }}%;background:{{ p.color }};" title="{{ p.icon }} {{ p.code }} ({{ p.name }}): {{ p.hours_hhmm }} ({{ p.percent }}%)"></div>
+            {% endfor %}
+        </div>
+        <div class="pos-grid">
+            {% for p in position_breakdown %}
+            <div class="pos-card" style="border-left:3px solid {{ p.color }};">
+                <div class="pos-head">
+                    <div class="pos-title">
+                        <span>{{ p.icon }}</span>
+                        <span>{{ p.code }}</span>
+                    </div>
+                    <span class="badge" style="background:{{ p.color }};color:#fff;font-size:10px;">{{ p.percent }}%</span>
+                </div>
+                <div class="pos-val">{{ p.hours_hhmm }}</div>
+                <small style="font-size:10px;">{{ p.sessions }} sessions</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if top_callsigns %}
+    <div class="card-dark stats-card">
+        <h5 class="mb-3">Top Callsigns</h5>
+        {% for c in top_callsigns %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <span class="pos-tag" style="background:{{ c.pos_color }};">{{ c.position }}</span>
+                <b>{{ c.callsign }}</b>
+            </div>
+            <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
+        </div>
+        {% endfor %}
+        {% if all_callsigns|length > 5 %}
+        <button class="btn btn-sm btn-outline-light mt-2 w-100" type="button" onclick="document.getElementById('callsigns-modal').classList.add('show')">View all callsigns ({{ all_callsigns|length }})</button>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 {% if excluded %}
@@ -320,8 +453,11 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
         <summary>Show callsigns ({{ i.callsigns|length }})</summary>
         <div class="div-cs-list">
             {% for c in i.callsigns %}
-            <div class="div-cs-row">
-                <div><b>{{ c.callsign }}</b></div>
+            <div class="div-cs-row align-items-center">
+                <div>
+                    <span class="pos-tag" style="background:{{ c.pos_color }};">{{ c.position }}</span>
+                    <b>{{ c.callsign }}</b>
+                </div>
                 <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
             </div>
             {% endfor %}
@@ -346,8 +482,11 @@ body.light .home-option.active{background:#dbeafe;border-color:#1f6feb;color:#11
         </div>
         <div class="cs-modal-list">
             {% for c in all_callsigns %}
-            <div class="cs-modal-row">
-                <div><b>{{ c.callsign }}</b></div>
+            <div class="cs-modal-row align-items-center">
+                <div>
+                    <span class="pos-tag" style="background:{{ c.pos_color }};">{{ c.position }}</span>
+                    <b>{{ c.callsign }}</b>
+                </div>
                 <div>{{ c.hours_hhmm }} • {{ c.sessions }} sessions</div>
             </div>
             {% endfor %}
@@ -413,6 +552,18 @@ function setPeriodHighlight(on){document.body.classList.toggle("period-hl",!!on)
 
 {% if all_fulfilled %}
 window.addEventListener("load",function(){if(typeof confetti!=="function")return;var k="{{ request.args.get('cid','') }}:{{ mode }}";if(sessionStorage.getItem("confetti-fired")===k)return;sessionStorage.setItem("confetti-fired",k);setTimeout(function(){var end=Date.now()+2500;(function frame(){confetti({particleCount:4,angle:60,spread:55,origin:{x:0},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});confetti({particleCount:4,angle:120,spread:55,origin:{x:1},colors:['#22c55e','#16a34a','#fde047','#3b82f6']});if(Date.now()<end)requestAnimationFrame(frame)}());confetti({particleCount:120,spread:80,origin:{y:.6}})},400)});
+{% endif %}
+
+{% if streak_info and streak_info.level >= 3 %}
+window.addEventListener("load",function(){
+    if(typeof confetti!=="function") return;
+    var sk="{{ request.args.get('cid','') }}:streak:{{ streak_info.level }}";
+    if(sessionStorage.getItem("streak-confetti")===sk) return;
+    sessionStorage.setItem("streak-confetti",sk);
+    setTimeout(function(){
+        confetti({particleCount:70,spread:75,origin:{y:.65},colors:['#ef4444','#f59e0b','#eab308','#8b5cf6']});
+    },500);
+});
 {% endif %}
 
 function exportPDF(){
