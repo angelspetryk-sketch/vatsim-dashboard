@@ -348,7 +348,8 @@ def classify(cs):
 
 @app.route("/", methods=["GET"])
 def home():
-    cid = request.args.get("cid", "1626475").strip()
+    raw_cid = request.args.get("cid")
+    cid = raw_cid.strip() if raw_cid is not None else ""
     sort_by = request.args.get("sort", "hours")
     mode = request.args.get("mode", "rolling")
     excluded = set(filter(None, request.args.get("exclude", "").split("|")))
@@ -412,6 +413,9 @@ def home():
             home_override=home_override,
             error_message=err_text
         )
+
+    if raw_cid is None:
+        return render_error(None)
 
     if not cid or not cid.isdigit():
         return render_error("Invalid CID")
