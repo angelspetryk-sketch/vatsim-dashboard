@@ -195,6 +195,11 @@ body.light .pos-card{background:#f9fafb;border-color:#e5e7eb;}
     <div class="alert alert-danger text-center w-100 my-2" role="alert" style="max-width:600px; border-radius:10px; font-weight:bold;">
         ⚠️ {{ error_message }}{% if request.args.get('cid') and error_message == "Invalid CID" %} ({{ request.args.get('cid') }}){% endif %}
     </div>
+    {% elif not request.args.get('cid') %}
+    <div class="card-dark w-100 my-2 text-center" style="max-width:600px; padding:16px; border-radius:12px; background:rgba(31,111,235,0.08); border-color:#1f6feb;">
+        <div style="font-size:16px; font-weight:bold; margin-bottom:4px;">👋 Welcome to VATSIM Dashboard!</div>
+        <small style="color:#9ca3af;">Enter your VATSIM CID below to view your controller statistics, visiting division hours, positions breakdown, and streaks.</small>
+    </div>
     {% else %}
     <div class="d-flex gap-2">
         <span class="badge bg-success">Fulfilled: {{ fulfilled_count }}</span>
